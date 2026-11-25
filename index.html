@@ -1275,7 +1275,7 @@ function vRecords(){
 "use strict";
 /* ============================== PRINT SHEETS ============================== */
 function sheetShell(title, sub, bodyHTML){
-  return '<div class="pv-bar"><button type="button" class="btn" data-back>← Back to the app</button>' +
+  return '<div class="pv-bar"><button type="button" class="btn" data-back onclick="return exitPrintView()">← Back to the app</button>' +
     '<button type="button" class="btn primary" data-printnow>🖨 Print / Save as PDF</button>' +
     '<span class="mini">Your print dialogue should already be open — if it isn\'t, tap <b>Print / Save as PDF</b>. Choose <b>US Letter</b> or <b>A4</b> — this sheet is the only thing that prints, and it shows your plan exactly as you\'ve filled it in.</span></div>' +
     '<div class="sheet"><h1>' + esc(title) + '</h1><p class="s-sub">' + esc(sub) + '</p>' + bodyHTML +
@@ -1329,20 +1329,35 @@ function printSheet(kind){
 
 /* ============================== LEAVING THE PRINT SHEET ============================== */
 /* The app view underneath never changed while the sheet was open (view + sub-tab are kept),
-   so re-rendering returns to the exact section the user came from. */
+   so re-rendering returns to the exact section and sub-tab the user came from.
+   The way out is deliberately redundant, because on the live site a single delegated
+   handler proved not to be enough: the Back button carries an inline onclick, a listener
+   bound directly to it when the sheet is drawn, a capture-phase document listener, a
+   listener on the sheet container itself, and the main click delegation — five separate
+   paths, any one of which closes the sheet. exitPrintView also guards every step, so an
+   error while clearing or re-rendering can never leave the sheet stuck on screen, and it
+   force-hides the sheet element as a final fallback. It is idempotent: extra calls once
+   the sheet is closed do nothing. */
 function exitPrintView(){
-  if (!document.body.classList.contains("printing")) return;
-  document.body.classList.remove("printing");
-  $("#printView").innerHTML = "";
-  render();
-  window.scrollTo({top: 0});
+  if (!document.body.classList.contains("printing")) return false;
+  try { document.body.classList.remove("printing"); } catch(e){}
+  var pv = document.getElementById("printView");
+  try { if (pv){ pv.innerHTML = ""; pv.style.display = "none"; } } catch(e){}
+  try { render(); } catch(e){}
+  try { window.scrollTo({top: 0}); } catch(e){}
+  return false;
 }
-/* The Back button gets its own capture-phase listener: it runs before every other click
-   handler, so nothing in the main delegation can swallow or outrun it. */
+window.exitPrintView = exitPrintView;
+/* Capture phase: runs before every other click handler. It deliberately does NOT stop
+   propagation, so the button's own handlers still fire as independent backups. */
 document.addEventListener("click", function(e){
   var b = e.target && e.target.closest ? e.target.closest("[data-back]") : null;
-  if (b){ e.preventDefault(); e.stopPropagation(); exitPrintView(); }
+  if (b) exitPrintView();
 }, true);
+/* A listener on the sheet container itself — independent of the document-level handlers. */
+document.getElementById("printView").addEventListener("click", function(e){
+  if (e.target && e.target.closest && e.target.closest("[data-back]")) exitPrintView();
+});
 /* When the browser's print dialogue closes — printed or cancelled — come back to the app too,
    instead of leaving the sheet on screen. */
 window.addEventListener("afterprint", exitPrintView);
@@ -1414,9 +1429,15 @@ document.addEventListener("click", function(e){
     return;
   }
   if (t.hasAttribute("data-print")){
-    $("#printView").innerHTML = printSheet(t.getAttribute("data-print"));
+    var pv2 = $("#printView");
+    pv2.style.display = ""; /* undo the force-hide from a previous exit before showing a new sheet */
+    pv2.innerHTML = printSheet(t.getAttribute("data-print"));
     document.body.classList.add("printing");
     window.scrollTo({top: 0});
+    /* Bind Back directly to the freshly drawn button too — one more independent way out,
+       attached to the element itself rather than any document-level delegation. */
+    var bb = pv2.querySelector("[data-back]");
+    if (bb) bb.addEventListener("click", function(){ exitPrintView(); });
     /* open the browser print dialogue straight away — the sheet reflects the current filled state */
     setTimeout(function(){ try { window.print(); } catch(e){} }, 80);
     return;
