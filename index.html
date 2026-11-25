@@ -1,0 +1,1458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Home Management App</title>
+<style>
+:root{
+  --bg:#FAF4E8; --bg2:#F5EDDC;
+  --card:#FFFFFF; --ink:#3E372E; --ink2:#6E6252; --muted:#9A8B74;
+  --teal:#2F9E8F; --teal-dark:#1E7A6C; --teal-soft:#E2F3EF;
+  --coral:#F0805F; --coral-dark:#D9623F; --coral-soft:#FDEAE2;
+  --sun:#F6C453; --sun-soft:#FCF0D2;
+  --line:#EFE5D0; --line2:#E7DCC2;
+  --radius:18px;
+  --shadow:0 2px 10px rgba(120,95,50,.07), 0 1px 3px rgba(120,95,50,.05);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size:16px; line-height:1.45;
+}
+button,[role="button"],select,summary,input:not([type="checkbox"],[type="radio"]){min-height:2.25rem}
+button{font:inherit; cursor:pointer}
+input,select,textarea{font:inherit; color:var(--ink)}
+h1,h2,h3{margin:0; line-height:1.2}
+h2{font-size:1.35rem}
+h3{font-size:1.05rem}
+p{margin:0}
+
+/* ---------- layout ---------- */
+.app{display:flex; min-height:100vh}
+.sidebar{
+  width:248px; flex:0 0 248px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  background:linear-gradient(180deg,#FFFDF8, #FBF3E2);
+  border-right:1px solid var(--line); padding:18px 14px 20px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.brand{display:flex; align-items:center; gap:10px; padding:2px 6px}
+.brand .bname{font-weight:800; font-size:1.06rem; letter-spacing:.2px}
+.brand .bsub{font-size:.78rem; color:var(--muted)}
+.nav{display:flex; flex-direction:column; gap:4px}
+.nav button{
+  display:flex; align-items:center; gap:10px; text-align:left;
+  background:transparent; border:1px solid transparent; border-radius:12px;
+  padding:9px 12px; font-weight:600; color:var(--ink2); min-height:2.75rem;
+}
+.nav button .ni{font-size:1.15rem; width:26px; text-align:center}
+.nav button:hover{background:#fff; border-color:var(--line)}
+.nav button.active{background:var(--teal-soft); color:var(--teal-dark); border-color:#CBE8E1}
+.side-data{margin-top:auto; border-top:1px dashed var(--line2); padding-top:12px; display:flex; flex-direction:column; gap:6px}
+.side-data .sd-title{font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:0 6px}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  background:#fff; border:1px solid var(--line2); color:var(--ink);
+  border-radius:12px; padding:8px 14px; font-weight:600; min-height:2.5rem;
+}
+.btn:hover{border-color:var(--teal); color:var(--teal-dark)}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#fff}
+.btn.primary:hover{background:var(--teal-dark); color:#fff}
+.btn.coral{background:var(--coral); border-color:var(--coral); color:#fff}
+.btn.coral:hover{background:var(--coral-dark); color:#fff}
+.btn.small{min-height:2.25rem; padding:5px 11px; font-size:.9rem; border-radius:10px}
+.btn.ghost{border-color:transparent; background:transparent}
+.btn.danger:hover{border-color:var(--coral); color:var(--coral-dark)}
+.main{flex:1; min-width:0; padding:22px 26px 60px}
+.wrap{max-width:1060px; margin:0 auto}
+
+/* ---------- header / greeting ---------- */
+.tophead{display:flex; align-items:flex-start; gap:16px; margin-bottom:18px; flex-wrap:wrap}
+.greet{flex:1; min-width:240px}
+.greet .hello{font-size:1.7rem; font-weight:800; letter-spacing:.2px}
+.greet .hello .wave{display:inline-block}
+.greet .today-line{color:var(--ink2); margin-top:3px}
+.greet .tip{margin-top:8px; display:inline-block; background:var(--sun-soft); border:1px solid #F0DFA8; color:#7A5E14; border-radius:999px; padding:4px 12px; font-size:.86rem; font-weight:600}
+.mascot{flex:0 0 auto}
+
+/* ---------- cards & grids ---------- */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px}
+.card + .card{margin-top:16px}
+.card-head{display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.card-head h3{flex:1}
+.card-head .hint{font-size:.85rem; color:var(--muted); flex-basis:100%}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+.grid2 > .card + .card, .grid3 > .card + .card{margin-top:0}
+.stack{display:flex; flex-direction:column; gap:16px}
+.stack > .card + .card{margin-top:0}
+
+/* ---------- view header ---------- */
+.viewhead{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px}
+.viewhead h2{flex:1; display:flex; align-items:center; gap:10px}
+.viewhead .vsub{flex-basis:100%; color:var(--ink2); font-size:.95rem}
+
+/* ---------- subtabs ---------- */
+.subtabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px}
+.subtabs button{
+  border:1px solid var(--line2); background:#fff; border-radius:999px;
+  padding:7px 15px; font-weight:600; color:var(--ink2); min-height:2.5rem;
+}
+.subtabs button.active{background:var(--coral-soft); border-color:#F6C4B2; color:var(--coral-dark)}
+
+/* ---------- checklists ---------- */
+.chk{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:12px; min-height:2.75rem}
+.chk:hover{background:#FBF7EC}
+.chk input[type="checkbox"]{width:22px; height:22px; accent-color:var(--teal); flex:0 0 auto; cursor:pointer}
+.chk .ctext{flex:1; min-width:0}
+.chk input[type="checkbox"]:checked ~ .ctext{color:var(--muted); text-decoration:line-through}
+.chk .who{font-size:.78rem; font-weight:700; background:var(--teal-soft); color:var(--teal-dark); border-radius:999px; padding:2px 9px; white-space:nowrap}
+.xbtn{
+  flex:0 0 auto; width:36px; height:36px; border-radius:10px; border:1px solid transparent;
+  background:transparent; color:var(--muted); font-size:1.15rem; line-height:1;
+}
+.xbtn:hover{color:var(--coral-dark); border-color:#F6C4B2; background:var(--coral-soft)}
+.addrow{display:flex; gap:8px; margin-top:10px}
+.addrow input{flex:1; min-width:0}
+.field, .addrow input, .cellinput, textarea.field{
+  border:1px solid var(--line2); border-radius:10px; background:#FFFDF8; padding:8px 11px; width:100%;
+}
+.field:focus, .addrow input:focus, .cellinput:focus, textarea.field:focus{outline:2px solid #BFE3DB; border-color:var(--teal)}
+textarea.field{resize:vertical; min-height:64px}
+.cellinput{padding:6px 9px; min-height:2.25rem}
+.num{width:96px}
+.progress{height:12px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-top:8px}
+.progress > div{height:100%; background:linear-gradient(90deg,var(--teal),#57BFA9); border-radius:999px; transition:width .3s}
+.progress.coralbar > div{background:linear-gradient(90deg,var(--coral),#F6A183)}
+.mini{font-size:.85rem; color:var(--muted)}
+.tag{display:inline-block; font-size:.78rem; font-weight:700; border-radius:999px; padding:2px 10px; background:var(--sun-soft); color:#7A5E14}
+.tag.teal{background:var(--teal-soft); color:var(--teal-dark)}
+.tag.coral{background:var(--coral-soft); color:var(--coral-dark)}
+
+/* rows of bound inputs */
+.irow{display:flex; gap:8px; align-items:center; padding:7px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap}
+.irow:last-child{border-bottom:none}
+.irow .grow{flex:1; min-width:120px}
+.irow label.fl{font-size:.8rem; color:var(--muted); display:flex; flex-direction:column; gap:2px}
+.irow .diff{font-weight:700; min-width:76px; text-align:right}
+.diff.pos{color:var(--teal-dark)} .diff.neg{color:var(--coral-dark)}
+
+/* day cards (meal plan / cleaning schedule) */
+.daygrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:14px}
+.daycard{background:#FFFDF8; border:1px solid var(--line); border-radius:14px; padding:13px 14px}
+.daycard.today{border-color:var(--teal); box-shadow:0 0 0 2px #CBE8E1}
+.daycard h4{margin:0 0 8px; font-size:.98rem; display:flex; align-items:center; gap:8px}
+.daycard h4 .tag{margin-left:auto}
+.slot{display:flex; align-items:center; gap:8px; margin-top:6px}
+.slot .sl{flex:0 0 74px; font-size:.8rem; font-weight:700; color:var(--muted)}
+.slot input{flex:1; min-width:0}
+.daycard .chk{padding:5px 4px; min-height:2.4rem}
+
+/* challenge grid */
+.chal{display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:10px}
+.chal button{
+  text-align:left; border:1px solid var(--line2); background:#FFFDF8; border-radius:13px;
+  padding:10px 12px; min-height:4.4rem; display:flex; flex-direction:column; gap:3px;
+}
+.chal button .dnum{font-size:.75rem; font-weight:800; letter-spacing:.05em; color:var(--muted)}
+.chal button.done{background:var(--teal-soft); border-color:#BFE3DB}
+.chal button.done .ctask{color:var(--teal-dark); text-decoration:line-through}
+.chal button .ctask{font-weight:600; font-size:.92rem}
+
+/* habit tracker */
+.habit{border-bottom:1px dashed var(--line); padding:10px 0}
+.habit:last-child{border-bottom:none}
+.habit .hname{display:flex; align-items:center; gap:8px; margin-bottom:7px}
+.habit .hname input{flex:1; min-width:0; font-weight:600}
+.dow{display:flex; gap:6px; flex-wrap:wrap}
+.dow button{
+  width:40px; height:40px; border-radius:12px; border:1px solid var(--line2); background:#FFFDF8;
+  font-weight:700; font-size:.8rem; color:var(--ink2); padding:0;
+}
+.dow button.on{background:var(--teal); border-color:var(--teal); color:#fff}
+.dow button small{display:block; font-size:.6rem; font-weight:600; opacity:.85}
+
+/* mood picker */
+.moods{display:flex; gap:8px; flex-wrap:wrap}
+.moods button{
+  width:52px; height:52px; border-radius:16px; border:2px solid var(--line2); background:#FFFDF8;
+  font-size:1.55rem; padding:0; line-height:1;
+}
+.moods button.on{border-color:var(--coral); background:var(--coral-soft)}
+.stars{font-size:1.3rem; letter-spacing:2px; color:var(--sun)}
+.stars .off{color:#E4D9BE}
+
+/* today hero bits */
+.top3 .chk{font-size:1.03rem; font-weight:600}
+.kv{display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line)}
+.kv:last-child{border-bottom:none}
+.kv b{text-align:right}
+.empty{color:var(--muted); font-size:.92rem; padding:6px 2px}
+.note-area{width:100%}
+
+/* zone list */
+.zone{border:1px solid var(--line); border-radius:14px; padding:13px 14px; background:#FFFDF8}
+.zone h4{margin:0 0 4px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.zone.active{border-color:var(--coral); box-shadow:0 0 0 2px #FADFD2}
+
+/* print view */
+#printView{display:none}
+body.printing .app{display:none}
+body.printing #printView{display:block}
+#printView .pv-bar{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin:16px auto; max-width:820px;
+}
+.sheet{
+  background:#fff; color:#222; max-width:820px; margin:0 auto 30px; padding:38px 42px;
+  border:1px solid #ddd; font-family:Georgia, "Times New Roman", serif;
+}
+.sheet h1{font-size:1.55rem; margin:0 0 2px}
+.sheet .s-sub{color:#666; font-family:"Segoe UI", system-ui, sans-serif; font-size:.86rem; margin-bottom:16px}
+.sheet h2{font-size:1.05rem; margin:20px 0 8px; border-bottom:2px solid #2F9E8F; padding-bottom:4px}
+.sheet table{width:100%; border-collapse:collapse; font-family:"Segoe UI", system-ui, sans-serif; font-size:.88rem}
+.sheet th,.sheet td{border:1px solid #CFC8B8; padding:6px 8px; text-align:left; vertical-align:top}
+.sheet th{background:#F3EEE1}
+.sheet .tot td{font-weight:700; background:#F8F4E8}
+.sheet ul{margin:4px 0 4px 18px; padding:0; font-family:"Segoe UI", system-ui, sans-serif; font-size:.9rem}
+.sheet .foot{margin-top:22px; color:#888; font-size:.78rem; font-family:"Segoe UI", system-ui, sans-serif}
+@page{margin:14mm}
+@media print{
+  body{background:#fff}
+  body.printing #printView .pv-bar{display:none}
+  .sheet{border:none; margin:0; max-width:none; padding:0}
+}
+
+/* toast */
+#toast{
+  position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#FFF7E8; padding:11px 18px; border-radius:999px; font-weight:600;
+  opacity:0; pointer-events:none; transition:.25s; z-index:60; max-width:92vw; text-align:center;
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .app{flex-direction:column}
+  .sidebar{
+    width:100%; flex:none; position:sticky; top:0; z-index:40; height:auto; overflow:visible;
+    padding:12px 12px 10px; border-right:none; border-bottom:1px solid var(--line);
+  }
+  .brand .bsub{display:none}
+  .nav{flex-direction:row; flex-wrap:wrap; gap:6px}
+  .nav button{padding:7px 10px; min-height:2.5rem; font-size:.92rem; border:1px solid var(--line); background:#fff}
+  .nav button .ni{width:auto}
+  .side-data{flex-direction:row; flex-wrap:wrap; align-items:center}
+  .side-data .sd-title{flex-basis:100%}
+  .main{padding:16px 14px 50px}
+  .greet .hello{font-size:1.4rem}
+  .mascot{display:none}
+  .sheet{padding:22px 18px}
+  .num{width:82px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="appRoot">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 30 L32 10 L56 30" fill="none" stroke="#F0805F" stroke-width="5" stroke-linecap="round"/><rect x="15" y="29" width="34" height="26" rx="5" fill="#FFF3D6" stroke="#E9C979" stroke-width="2"/><rect x="27" y="40" width="10" height="15" rx="3" fill="#2F9E8F"/><circle cx="23" cy="36" r="2.2" fill="#3E372E"/><circle cx="41" cy="36" r="2.2" fill="#3E372E"/><path d="M27 44 Q32 48 37 44" fill="none" stroke="#3E372E" stroke-width="2" stroke-linecap="round" transform="translate(-4,-6)"/></svg>
+      <div>
+        <div class="bname">Our Home</div>
+        <div class="bsub">Home Management</div>
+      </div>
+    </div>
+    <nav class="nav" id="mainNav" aria-label="Sections"></nav>
+    <div class="side-data">
+      <div class="sd-title">Your data</div>
+      <button class="btn small" id="btnBackup">⬇ Back up (JSON)</button>
+      <button class="btn small" id="btnRestore">⬆ Restore backup</button>
+      <button class="btn small" id="btnDemo">↺ Restore demo data</button>
+      <input type="file" id="fileRestore" accept="application/json,.json" hidden />
+      <p class="mini" style="padding:0 6px">Everything is saved in this browser on this device — nothing leaves it. Back up now and then so you never lose your planner.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap" id="viewRoot"></div>
+  </main>
+</div>
+
+<div id="printView"></div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============================== utilities ============================== */
+var $ = function(s, r){ return (r||document).querySelector(s); };
+var DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+var DAYS3 = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+var _uid = 100;
+function nid(){ _uid++; return "i" + Date.now().toString(36) + _uid; }
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function getP(o, p){
+  var ks = p.split("."), a = o, i;
+  for (i = 0; i < ks.length; i++){ if (a == null) return undefined; a = a[ks[i]]; }
+  return a;
+}
+function setP(o, p, v){
+  var ks = p.split("."), a = o, i;
+  for (i = 0; i < ks.length - 1; i++){ a = a[ks[i]]; }
+  a[ks[ks.length - 1]] = v;
+}
+function money(n){
+  var v = parseFloat(n) || 0;
+  return "$" + v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function dayIndex(){ /* Monday = 0 */
+  var d = new Date().getDay(); return (d + 6) % 7;
+}
+function toast(msg){
+  var t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+}
+</script>
+<script>
+"use strict";
+/* ============================== demo data ============================== */
+function T(text, done){ return {id: nid(), text: text, done: !!done}; }
+function demoData(){
+  return {
+    familyName: "Sara",
+    people: [
+      {id: nid(), name: "Sara", role: "Mum"},
+      {id: nid(), name: "Ahmed", role: "Dad"},
+      {id: nid(), name: "Ayesha", role: "Age 10"},
+      {id: nid(), name: "Bilal", role: "Age 7"}
+    ],
+    today: {
+      top3: [ T("Book Bilal's dentist appointment"), T("Defrost chicken for tonight's dinner", true), T("20-minute living room reset") ],
+      extra: [ T("Water the plants"), T("Reply to school email") ]
+    },
+    checkins: {},
+    cleaning: {
+      daily: [ T("Make the beds"), T("Wipe kitchen counters"), T("One load of laundry"), T("Empty the dishwasher"), T("Quick bathroom wipe-down"), T("10-minute evening tidy") ],
+      weeklyPlan: {
+        "Monday":    [ T("Vacuum living areas"), T("Clean the bathroom mirrors") ],
+        "Tuesday":   [ T("Mop kitchen floor"), T("Dust shelves & TV unit") ],
+        "Wednesday": [ T("Deep-clean bathrooms"), T("Change hand towels") ],
+        "Thursday":  [ T("Vacuum bedrooms"), T("Wipe appliances") ],
+        "Friday":    [ T("Change bed sheets"), T("Clean out the fridge") ],
+        "Saturday":  [ T("Windows in one room"), T("Tidy the entryway") ],
+        "Sunday":    [ T("Light day — reset & rest"), T("Plan the week ahead") ]
+      },
+      weeklyFocus: "Kitchen deep-clean week",
+      monthly: [ T("Wash windows inside"), T("Clean oven & microwave"), T("Descale kettle & coffee maker"), T("Wipe skirting boards"), T("Clean washing machine filter"), T("Rotate mattresses"), T("Dust ceiling fans & lights") ],
+      zones: [
+        {name: "Zone 1 · Entry & Living Room", tasks: "Declutter surfaces, dust, vacuum sofa cushions"},
+        {name: "Zone 2 · Kitchen & Dining", tasks: "Cabinet fronts, pantry check, mop corners"},
+        {name: "Zone 3 · Bathrooms", tasks: "Grout scrub, restock, wash bath mats"},
+        {name: "Zone 4 · Bedrooms", tasks: "Wardrobe sort, under-bed vacuum, fresh linen"},
+        {name: "Zone 5 · Laundry & Extras", tasks: "Laundry room wipe-down, linen cupboard, balcony"}
+      ],
+      zoneWeek: 1,
+      rooms: [
+        {room: "Kitchen", tasks: [ T("Counters & sink"), T("Stovetop"), T("Fridge shelves"), T("Floor mop") ]},
+        {room: "Bathrooms", tasks: [ T("Toilet & sink"), T("Shower / tub"), T("Mirrors"), T("Floor & bins") ]},
+        {room: "Living Room", tasks: [ T("Dust surfaces"), T("Vacuum & cushions"), T("Toys & books back in place") ]},
+        {room: "Bedrooms", tasks: [ T("Fresh sheets"), T("Dust nightstands"), T("Laundry basket empty") ]}
+      ],
+      laundry: [
+        {day: "Monday", load: "Whites & towels"},
+        {day: "Wednesday", load: "School uniforms & kids' clothes"},
+        {day: "Friday", load: "Bed sheets"},
+        {day: "Saturday", load: "Colours & delicates"}
+      ],
+      seasonal: {
+        "Spring": [ T("Wash curtains"), T("Deep-clean carpets"), T("Sort wardrobes — donate winter wear") ],
+        "Summer": [ T("Clean fans & AC filters"), T("Wash outdoor furniture"), T("Check sunscreen & first-aid stock") ],
+        "Autumn": [ T("Wash & store summer bedding"), T("Clean gutters / balcony drain"), T("Check heaters") ],
+        "Winter": [ T("Deep-clean pantry before holidays"), T("Wash blankets & throws"), T("Check pipes & draughts") ]
+      },
+      supplies: [
+        {id: nid(), name: "All-purpose spray", qty: "2 bottles", low: false},
+        {id: nid(), name: "Dish soap", qty: "1 bottle", low: true},
+        {id: nid(), name: "Laundry detergent", qty: "Half box", low: true},
+        {id: nid(), name: "Bin bags", qty: "1 roll", low: false},
+        {id: nid(), name: "Microfibre cloths", qty: "6", low: false},
+        {id: nid(), name: "Bathroom cleaner", qty: "1 bottle", low: false}
+      ],
+      challengeDay: [
+        "Wipe all door handles","Clean one kitchen drawer","Dust every light switch","Wipe the bathroom mirror",
+        "Clean under the kitchen sink","Sort the junk drawer","Wipe skirting in one room","Clean the microwave",
+        "Dust picture frames","Wipe window sills","Clean one shelf of the fridge","Polish taps & faucets",
+        "Vacuum under the sofa","Wipe remote controls & phones","Clean the stovetop fully","Sort cleaning supplies",
+        "Wash the bath mat","Dust ceiling corners","Clean one window inside & out","Wipe chair legs & table base",
+        "Empty & wipe all bins","Clean the kettle / descale","Dust books & shelves","Wipe the front door both sides",
+        "Clean under beds","Sort one cupboard","Wipe the washing machine","Clean mirrors everywhere",
+        "Final sparkle: your choice","Rest day — enjoy your home 🎉"
+      ],
+      challengeDone: [true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]
+    },
+    chores: {
+      chart: {
+        "0": { "Monday": "Set the table", "Tuesday": "Set the table", "Wednesday": "Feed the cat", "Thursday": "Set the table", "Friday": "Feed the cat", "Saturday": "Tidy entryway", "Sunday": "Rest" },
+        "1": { "Monday": "Take out bins", "Tuesday": "—", "Wednesday": "Take out bins", "Thursday": "—", "Friday": "Take out bins", "Saturday": "Vacuum car", "Sunday": "Rest" },
+        "2": { "Monday": "Tidy bedroom", "Tuesday": "Put away laundry", "Wednesday": "Tidy bedroom", "Thursday": "Water plants", "Friday": "Tidy bedroom", "Saturday": "Help with lunch", "Sunday": "Rest" },
+        "3": { "Monday": "Put shoes away", "Tuesday": "Tidy toys", "Wednesday": "Put shoes away", "Thursday": "Tidy toys", "Friday": "Put shoes away", "Saturday": "Sort his books", "Sunday": "Rest" }
+      },
+      rewards: [
+        {id: nid(), person: "Ayesha", reward: "Pick Friday's dessert", stars: 4, goal: 5},
+        {id: nid(), person: "Bilal", reward: "Extra story at bedtime", stars: 3, goal: 5},
+        {id: nid(), person: "Whole family", reward: "Saturday movie night", stars: 5, goal: 5}
+      ],
+      responsibilities: [
+        {id: nid(), task: "Bins out on Monday & Friday evenings", who: "Ahmed", done: false},
+        {id: nid(), task: "School bags checked every night", who: "Sara", done: false},
+        {id: nid(), task: "Cat fed morning & evening", who: "Ayesha", done: false},
+        {id: nid(), task: "Shoes & coats in the hallway basket", who: "Bilal", done: false}
+      ]
+    },
+    declutter: {
+      goals: [
+        {id: nid(), text: "Clear the spare-room corner", target: 20, doneCount: 12},
+        {id: nid(), text: "Kids' clothes that no longer fit", target: 30, doneCount: 30},
+        {id: nid(), text: "Kitchen gadgets we never use", target: 10, doneCount: 4}
+      ],
+      tracker: [
+        {id: nid(), room: "Spare room", donated: 8, tossed: 4, date: "2026-11-18"},
+        {id: nid(), room: "Kids' wardrobes", donated: 26, tossed: 4, date: "2026-11-10"},
+        {id: nid(), room: "Kitchen", donated: 3, tossed: 1, date: "2026-11-21"}
+      ],
+      challenge: [
+        "One expired item from the fridge","A shirt you never wear","Old magazines or catalogues","Dried-up pens",
+        "One kitchen duplicate","Worn-out socks & underwear","A toy that's broken","Expired medicines (safely)",
+        "Cables you can't identify","One mug too many","Old phone cases","Books you'll never re-read",
+        "Makeup past its date","A board game missing pieces","Single earrings & odd socks","Paper pile on the counter",
+        "One item from the junk drawer","Shoes that hurt","Old gift bags & wrap scraps","Apps you never open",
+        "A container without a lid","Fridge leftovers from last week","Kids' artwork — keep favourites only","One thing from under the bed",
+        "Bathroom samples & minis","A bag in the hallway","Expired pantry spices","One item from the car",
+        "Email inbox: delete 50","Celebrate — donate bag out the door 🎉"
+      ],
+      challengeDone: [true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+      makeover: [
+        {id: nid(), room: "Spare room → reading corner", budget: 150, spent: 40, steps: [ T("Clear & donate the boxes", true), T("Paint one wall sage green"), T("Second-hand armchair"), T("Floor lamp & small shelf") ], notes: "Keep it calm — no desk, it's a rest space."}
+      ]
+    },
+    meals: {
+      plan: {
+        "Monday":    {b: "Porridge & fruit", l: "Packed lunches", d: "Chicken karahi + rice"},
+        "Tuesday":   {b: "Eggs & toast", l: "Leftover karahi wraps", d: "Lentil soup + naan"},
+        "Wednesday": {b: "Yoghurt & granola", l: "Packed lunches", d: "Pasta bake"},
+        "Thursday":  {b: "Porridge & fruit", l: "Sandwiches", d: "Grilled fish + veg"},
+        "Friday":    {b: "Pancakes", l: "Packed lunches", d: "Homemade pizza night"},
+        "Saturday":  {b: "Full breakfast", l: "Out / leftovers", d: "BBQ at home"},
+        "Sunday":    {b: "Toast & eggs", l: "Roast lunch", d: "Soup + toasties"}
+      },
+      grocery: [
+        {id: nid(), item: "Chicken (1.5 kg)", qty: "1 pack", done: false, cat: "Meat"},
+        {id: nid(), item: "Milk", qty: "2 L", done: true, cat: "Dairy"},
+        {id: nid(), item: "Eggs", qty: "12", done: false, cat: "Dairy"},
+        {id: nid(), item: "Tomatoes", qty: "1 kg", done: false, cat: "Produce"},
+        {id: nid(), item: "Rice", qty: "2 kg bag", done: false, cat: "Pantry"},
+        {id: nid(), item: "Dish soap", qty: "1", done: false, cat: "Household"}
+      ],
+      pantry: [
+        {id: nid(), item: "Rice", qty: "4 kg", exp: "2027-03-01"},
+        {id: nid(), item: "Red lentils", qty: "1.5 kg", exp: "2026-12-15"},
+        {id: nid(), item: "Pasta", qty: "3 packs", exp: "2027-01-20"}
+      ],
+      fridge: [
+        {id: nid(), item: "Milk", qty: "1.5 L", exp: "2026-11-28"},
+        {id: nid(), item: "Yoghurt", qty: "500 g", exp: "2026-11-30"},
+        {id: nid(), item: "Leftover soup", qty: "1 tub", exp: "2026-11-27"}
+      ],
+      freezer: [
+        {id: nid(), item: "Chicken portions", qty: "2 packs", exp: "2027-02-01"},
+        {id: nid(), item: "Frozen peas", qty: "1 bag", exp: "2027-05-01"},
+        {id: nid(), item: "Naan breads", qty: "8", exp: "2027-01-10"}
+      ],
+      recipes: [
+        {id: nid(), name: "Weeknight Chicken Karahi", mins: "35 min", ing: "Chicken, tomatoes, ginger, green chillies, oil, salt, garam masala", steps: "Brown chicken in oil. Add ginger and tomatoes, cook down to a thick sauce. Finish with chillies and garam masala. Serve with rice or naan."},
+        {id: nid(), name: "15-Minute Lentil Soup", mins: "15 min", ing: "Red lentils, onion, carrot, cumin, stock cube, lemon", steps: "Simmer everything 12 minutes, blend roughly, squeeze of lemon on top."}
+      ]
+    },
+    money: {
+      monthLabel: "November 2026",
+      income: 3200,
+      budget: [
+        {id: nid(), cat: "Groceries", budgeted: 600, spent: 412},
+        {id: nid(), cat: "Rent / mortgage", budgeted: 1200, spent: 1200},
+        {id: nid(), cat: "Utilities", budgeted: 220, spent: 186},
+        {id: nid(), cat: "Transport", budgeted: 180, spent: 142},
+        {id: nid(), cat: "Kids & school", budgeted: 250, spent: 198},
+        {id: nid(), cat: "Eating out", budgeted: 120, spent: 96},
+        {id: nid(), cat: "Fun & family", budgeted: 150, spent: 60}
+      ],
+      weekly: [
+        {id: nid(), week: "Week 1 (1–7 Nov)", limitAmt: 400, spent: 356},
+        {id: nid(), week: "Week 2 (8–14 Nov)", limitAmt: 400, spent: 402},
+        {id: nid(), week: "Week 3 (15–21 Nov)", limitAmt: 400, spent: 288},
+        {id: nid(), week: "Week 4 (22–30 Nov)", limitAmt: 400, spent: 145}
+      ],
+      bills: [
+        {id: nid(), name: "Electricity", amount: 96, due: "5th", paid: true},
+        {id: nid(), name: "Internet", amount: 45, due: "12th", paid: true},
+        {id: nid(), name: "Water", amount: 38, due: "18th", paid: false},
+        {id: nid(), name: "School fees", amount: 210, due: "25th", paid: false},
+        {id: nid(), name: "Mobile phones", amount: 52, due: "28th", paid: false}
+      ],
+      savings: [
+        {id: nid(), name: "Family holiday fund", goal: 1500, saved: 640, note: "Save $25 every Friday"},
+        {id: nid(), name: "Emergency cushion", goal: 3000, saved: 1750, note: "Aim: 3 months of basics"},
+        {id: nid(), name: "$5 challenge — every $5 note goes in the jar", goal: 260, saved: 95, note: "Kitchen jar, count monthly"}
+      ],
+      debts: [
+        {id: nid(), name: "Store card", balance: 420, min: 25, rate: "24.9%"},
+        {id: nid(), name: "Credit card", balance: 1850, min: 55, rate: "19.9%"},
+        {id: nid(), name: "Car loan", balance: 6400, min: 210, rate: "6.5%"}
+      ],
+      subs: [
+        {id: nid(), name: "Streaming (family plan)", amount: 15.99, cycle: "Monthly", renew: "3 Dec"},
+        {id: nid(), name: "Cloud storage", amount: 2.99, cycle: "Monthly", renew: "9 Dec"},
+        {id: nid(), name: "Kids' learning app", amount: 59.99, cycle: "Yearly", renew: "14 Jan"}
+      ]
+    },
+    health: {
+      habits: [
+        {id: nid(), name: "Morning walk", days: [true,true,false,true,false,false,false]},
+        {id: nid(), name: "2 litres of water", days: [true,false,true,true,false,false,false]},
+        {id: nid(), name: "Read 10 minutes", days: [false,true,true,false,false,false,false]},
+        {id: nid(), name: "No phone after 10 pm", days: [true,false,false,true,false,false,false]}
+      ],
+      moodlog: [
+        {id: nid(), date: "2026-11-24", mood: "😊", sleep: 7.5, note: "Good day, walk helped"},
+        {id: nid(), date: "2026-11-23", mood: "😐", sleep: 6, note: "Busy at work"},
+        {id: nid(), date: "2026-11-22", mood: "😄", sleep: 8, note: "Family day out"}
+      ],
+      meds: [
+        {id: nid(), name: "Vitamin D", dose: "1 tablet", time: "With breakfast", who: "Sara", taken: true},
+        {id: nid(), name: "Iron syrup", dose: "5 ml", time: "After dinner", who: "Ayesha", taken: false}
+      ],
+      selfcare: [ T("Face mask & early night", true), T("Solo coffee walk"), T("Call a friend"), T("Long bath on Sunday") ],
+      gratitude: [
+        {id: nid(), date: "2026-11-24", text: "Bilal read a whole book by himself today."},
+        {id: nid(), date: "2026-11-23", text: "Ahmed handled dinner so I could rest."}
+      ]
+    },
+    planning: {
+      goals: [
+        {id: nid(), text: "Set up a calm morning routine for school days", by: "Dec 2026", done: false},
+        {id: nid(), text: "Finish the spare-room reading corner", by: "Jan 2027", done: false},
+        {id: nid(), text: "Save the holiday fund in full", by: "Jun 2027", done: false}
+      ],
+      todos: [ T("Renew library books", true), T("Buy birthday gift for Ammi"), T("Print school forms"), T("Book car service") ],
+      daily: [
+        {id: nid(), time: "7:00", task: "Wake up, stretch, big glass of water"},
+        {id: nid(), time: "8:00", task: "School run"},
+        {id: nid(), time: "9:00", task: "Work block 1"},
+        {id: nid(), time: "13:00", task: "Lunch & short walk"},
+        {id: nid(), time: "15:30", task: "School pick-up & snacks"},
+        {id: nid(), time: "18:00", task: "Dinner together"},
+        {id: nid(), time: "21:30", task: "Tidy reset + plan tomorrow"}
+      ],
+      weeklyPlan: {
+        "Monday": "Work focus day · bins out",
+        "Tuesday": "Errands after school run",
+        "Wednesday": "Midweek reset · bathrooms",
+        "Thursday": "Family call with grandparents",
+        "Friday": "Pizza night · movie pick",
+        "Saturday": "Outing + big shop",
+        "Sunday": "Slow morning · plan the week"
+      },
+      monthlyNotes: "November: school parents' evening on the 27th. Car service due. Start holiday-fund top-ups. Ayesha's recital rehearsals every Tuesday.",
+      braindump: "Gift ideas for Ammi — a plant + her favourite biscuits.\nLook into swimming lessons for Bilal.\nHallway paint: warm white or soft sage?\nSort the photo prints box one rainy Sunday."
+    },
+    records: {
+      contacts: [
+        {id: nid(), name: "Dr. Khan (family doctor)", relation: "Health", phone: "555-0142"},
+        {id: nid(), name: "Sunny Plumbing", relation: "Home repairs", phone: "555-0198"},
+        {id: nid(), name: "Mrs. Patel (neighbour)", relation: "Emergency / spare key", phone: "555-0117"},
+        {id: nid(), name: "School office", relation: "Kids", phone: "555-0160"}
+      ],
+      passwords: [
+        {id: nid(), site: "Electricity provider", user: "sara.family@email.com", pass: "•••••••• (in the blue notebook, p.4)"},
+        {id: nid(), site: "School portal", user: "sara.parent", pass: "•••••••• (password manager)"}
+      ],
+      insurance: [
+        {id: nid(), type: "Home insurance", provider: "SafeNest", policy: "HN-4482", renew: "Mar 2027"},
+        {id: nid(), type: "Car insurance", provider: "DriveSure", policy: "DS-9917", renew: "Jan 2027"},
+        {id: nid(), type: "Health cover", provider: "MediCare Plus", policy: "MC-2204", renew: "Jun 2027"}
+      ],
+      pets: [
+        {id: nid(), name: "Milo", type: "Cat, 3 years", vet: "Happy Paws Vet — 555-0133", notes: "Booster due Feb 2027. Indoor cat, loves the sunny windowsill."}
+      ],
+      docs: [
+        {id: nid(), name: "Passports (whole family)", location: "Filing cabinet, top drawer", exp: "2031"},
+        {id: nid(), name: "House deed", location: "Safe, bedroom wardrobe", exp: "—"},
+        {id: nid(), name: "Car registration", location: "Glove box copy + filing cabinet", exp: "Aug 2027"},
+        {id: nid(), name: "Kids' birth certificates", location: "Filing cabinet, 'Kids' folder", exp: "—"}
+      ]
+    }
+  };
+}
+
+/* ============================== state ============================== */
+var LS_KEY = "pixelora-home-management-v1";
+var state = null;
+function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){} }
+function load(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (raw){ state = JSON.parse(raw); if (state && state.cleaning && state.meals && state.money) return; }
+  } catch(e){}
+  state = demoData(); save();
+}
+load();
+
+/* ============================== factories (for Add buttons) ============================== */
+var FACTORIES = {
+  "today.top3": function(){ return T(""); },
+  "today.extra": function(){ return T(""); },
+  "cleaning.daily": function(){ return T(""); },
+  "cleaning.monthly": function(){ return T(""); },
+  "cleaning.supplies": function(){ return {id: nid(), name: "", qty: "", low: false}; },
+  "declutter.goals": function(){ return {id: nid(), text: "", target: 10, doneCount: 0}; },
+  "declutter.tracker": function(){ return {id: nid(), room: "", donated: 0, tossed: 0, date: todayKey()}; },
+  "declutter.makeover": function(){ return {id: nid(), room: "", budget: 0, spent: 0, steps: [], notes: ""}; },
+  "meals.grocery": function(){ return {id: nid(), item: "", qty: "", done: false, cat: "Other"}; },
+  "meals.pantry": function(){ return {id: nid(), item: "", qty: "", exp: ""}; },
+  "meals.fridge": function(){ return {id: nid(), item: "", qty: "", exp: ""}; },
+  "meals.freezer": function(){ return {id: nid(), item: "", qty: "", exp: ""}; },
+  "meals.recipes": function(){ return {id: nid(), name: "", mins: "", ing: "", steps: ""}; },
+  "money.budget": function(){ return {id: nid(), cat: "", budgeted: 0, spent: 0}; },
+  "money.weekly": function(){ return {id: nid(), week: "", limitAmt: 0, spent: 0}; },
+  "money.bills": function(){ return {id: nid(), name: "", amount: 0, due: "", paid: false}; },
+  "money.savings": function(){ return {id: nid(), name: "", goal: 0, saved: 0, note: ""}; },
+  "money.debts": function(){ return {id: nid(), name: "", balance: 0, min: 0, rate: ""}; },
+  "money.subs": function(){ return {id: nid(), name: "", amount: 0, cycle: "Monthly", renew: ""}; },
+  "health.habits": function(){ return {id: nid(), name: "", days: [false,false,false,false,false,false,false]}; },
+  "health.moodlog": function(){ return {id: nid(), date: todayKey(), mood: "😊", sleep: 7, note: ""}; },
+  "health.meds": function(){ return {id: nid(), name: "", dose: "", time: "", who: "", taken: false}; },
+  "health.selfcare": function(){ return T(""); },
+  "health.gratitude": function(){ return {id: nid(), date: todayKey(), text: ""}; },
+  "planning.goals": function(){ return {id: nid(), text: "", by: "", done: false}; },
+  "planning.todos": function(){ return T(""); },
+  "planning.daily": function(){ return {id: nid(), time: "", task: ""}; },
+  "records.contacts": function(){ return {id: nid(), name: "", relation: "", phone: ""}; },
+  "records.passwords": function(){ return {id: nid(), site: "", user: "", pass: ""}; },
+  "records.insurance": function(){ return {id: nid(), type: "", provider: "", policy: "", renew: ""}; },
+  "records.pets": function(){ return {id: nid(), name: "", type: "", vet: "", notes: ""}; },
+  "records.docs": function(){ return {id: nid(), name: "", location: "", exp: ""}; },
+  "chores.responsibilities": function(){ return {id: nid(), task: "", who: "", done: false}; },
+  "chores.rewards": function(){ return {id: nid(), person: "", reward: "", stars: 0, goal: 5}; },
+  "people": function(){ return {id: nid(), name: "", role: ""}; }
+};
+</script>
+<script>
+"use strict";
+/* ============================== shared render helpers ============================== */
+var view = "today";
+var SUB = { cleaning: "checklists", chores: "chart", declutter: "goals", meals: "planner", money: "budget", health: "habits", planning: "goals", records: "contacts" };
+
+function chkList(path, items){
+  if (!items.length) return '<p class="empty">Nothing here yet — add your first item below.</p>';
+  return items.map(function(it, i){
+    return '<label class="chk"><input type="checkbox" data-check="' + path + '.' + i + '.done"' + (it.done ? " checked" : "") + '>' +
+      '<span class="ctext">' + esc(it.text) + '</span>' +
+      '<button type="button" class="xbtn" data-del="' + path + ':' + i + '" aria-label="Remove item">×</button></label>';
+  }).join("");
+}
+function addRow(path, placeholder){
+  return '<div class="addrow"><input type="text" data-addinput="' + path + '" placeholder="' + esc(placeholder || "Add an item…") + '" enterkeyhint="done">' +
+    '<button type="button" class="btn small primary" data-addtext="' + path + '">+ Add</button></div>';
+}
+function addBtn(path, label){
+  return '<div style="margin-top:10px"><button type="button" class="btn small" data-add="' + path + '">+ ' + esc(label) + '</button></div>';
+}
+function subTabs(viewName, tabs){
+  return '<div class="subtabs">' + tabs.map(function(t){
+    return '<button type="button" data-sub="' + viewName + ':' + t[0] + '"' + (SUB[viewName] === t[0] ? ' class="active"' : "") + '>' + esc(t[1]) + '</button>';
+  }).join("") + "</div>";
+}
+function viewHead(icon, title, sub, printKind){
+  return '<div class="viewhead"><h2><span aria-hidden="true">' + icon + '</span> ' + esc(title) + "</h2>" +
+    (printKind ? '<button type="button" class="btn coral" data-print="' + printKind + '">🖨 Print this plan</button>' : "") +
+    (sub ? '<p class="vsub">' + esc(sub) + "</p>" : "") + "</div>";
+}
+function cardHead(icon, title, hint){
+  return '<div class="card-head"><h3>' + icon + " " + esc(title) + "</h3>" + (hint ? '<span class="hint">' + esc(hint) + "</span>" : "") + "</div>";
+}
+function bindInput(path, value, opts){
+  opts = opts || {};
+  return '<input class="' + (opts.cls || "field") + '" type="' + (opts.type || "text") + '" data-bind="' + path + '" value="' + esc(value) + '"' +
+    (opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : "") + (opts.step ? ' step="' + opts.step + '"' : "") + ">";
+}
+function starStr(n, goal){
+  var s = "", i;
+  for (i = 0; i < goal; i++) s += '<span class="' + (i < n ? "" : "off") + '">★</span>';
+  return '<span class="stars">' + s + "</span>";
+}
+function mascotSVG(){
+  return '<svg class="mascot" width="92" height="92" viewBox="0 0 120 120" role="img" aria-label="A happy little house">' +
+    '<circle cx="98" cy="20" r="11" fill="#F6C453"/><g stroke="#F6C453" stroke-width="3" stroke-linecap="round">' +
+    '<path d="M98 2v4M98 34v4M80 20h4M112 20h4M85 7l3 3M111 7l-3 3M85 33l3-3M111 33l-3-3"/></g>' +
+    '<path d="M14 52 L60 18 L106 52" fill="none" stroke="#F0805F" stroke-width="7" stroke-linecap="round"/>' +
+    '<rect x="26" y="50" width="68" height="52" rx="8" fill="#FFF3D6" stroke="#E9C979" stroke-width="2.5"/>' +
+    '<rect x="52" y="76" width="16" height="26" rx="5" fill="#2F9E8F"/>' +
+    '<circle cx="40" cy="66" r="3.2" fill="#3E372E"/><circle cx="80" cy="66" r="3.2" fill="#3E372E"/>' +
+    '<circle cx="33" cy="73" r="4" fill="#F6B8A0" opacity=".8"/><circle cx="87" cy="73" r="4" fill="#F6B8A0" opacity=".8"/>' +
+    '<path d="M50 74 Q60 81 70 74" fill="none" stroke="#3E372E" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<path d="M60 18 q-2-9-10-11 q1 9 10 11z" fill="#57BFA9"/><path d="M60 18 q2-9 10-11 q-1 9-10 11z" fill="#2F9E8F"/></svg>';
+}
+function greetingHTML(){
+  var now = new Date(), hr = now.getHours();
+  var word, emoji, tip;
+  if (hr < 5){ word = "Still up"; emoji = "🌙"; tip = "A quiet house is a good house. One small reset, then rest."; }
+  else if (hr < 12){ word = "Good morning"; emoji = "☀️"; tip = "Start with your Top 3 — everything else is a bonus."; }
+  else if (hr < 17){ word = "Good afternoon"; emoji = "🌤️"; tip = "Halfway there. A 10-minute tidy now saves the evening."; }
+  else if (hr < 21){ word = "Good evening"; emoji = "🌆"; tip = "Dinner, a quick reset, and the day is basically done."; }
+  else { word = "Good night"; emoji = "🌙"; tip = "Set out tomorrow's Top 3, then switch off."; }
+  var dateStr = now.toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+  return '<div class="tophead"><div class="greet"><div class="hello">' + word + ", " + esc(state.familyName || "friend") + ' <span class="wave" aria-hidden="true">' + emoji + '</span></div>' +
+    '<p class="today-line">' + esc(dateStr) + ' · Here is your home at a glance.</p>' +
+    '<span class="tip">💡 ' + esc(tip) + "</span></div>" + mascotSVG() + "</div>";
+}
+
+/* ============================== TODAY ============================== */
+function vToday(){
+  var di = dayIndex(), dayName = DAYS[di];
+  var meals = state.meals.plan[dayName] || {b:"", l:"", d:""};
+  var cleanToday = state.cleaning.weeklyPlan[dayName] || [];
+  var ck = state.checkins[todayKey()] || {mood: "", energy: 3, note: ""};
+  var moods = ["😄","😊","😐","😟","😢"];
+  var html = greetingHTML();
+  html += '<div class="grid2">';
+  /* Top 3 + more */
+  html += '<section class="card top3">' + cardHead("⭐", "Today's Top 3", "The three things that matter most today. Tick them off as you go.") +
+    chkList("today.top3", state.today.top3) + addRow("today.top3", "Add a priority…") +
+    '<h3 style="margin:16px 0 6px">🌿 Also today</h3>' + chkList("today.extra", state.today.extra) + addRow("today.extra", "Add a smaller task…") + "</section>";
+  /* check-in */
+  html += '<section class="card">' + cardHead("💛", "Quick check-in", "Ten seconds, just for you. Saved for today only in this view.") +
+    '<p class="mini" style="margin-bottom:8px">How are you feeling?</p><div class="moods">' +
+    moods.map(function(m){ return '<button type="button" data-mood="' + m + '" aria-label="Mood ' + m + '"' + (ck.mood === m ? ' class="on"' : "") + ">" + m + "</button>"; }).join("") + "</div>" +
+    '<p class="mini" style="margin:14px 0 6px">Energy level: <b>' + (ck.energy || 3) + " / 5</b></p>" +
+    '<input type="range" min="1" max="5" step="1" value="' + (ck.energy || 3) + '" data-range="energy" aria-label="Energy level" style="width:100%">' +
+    '<p class="mini" style="margin:10px 0 6px">One line about today:</p>' +
+    '<input class="field" type="text" data-checkin-note value="' + esc(ck.note || "") + '" placeholder="e.g. Busy but good — walk helped">' +
+    "</section>";
+  html += "</div>";
+  html += '<div class="grid2" style="margin-top:16px">';
+  /* today's cleaning */
+  html += '<section class="card">' + cardHead("🧹", "Today's cleaning · " + dayName, "From your weekly cleaning schedule.") +
+    (cleanToday.length ? chkList("cleaning.weeklyPlan." + dayName, cleanToday) : '<p class="empty">No cleaning planned today.</p>') +
+    addRow("cleaning.weeklyPlan." + dayName, "Add a cleaning task for " + dayName + "…") + "</section>";
+  /* today's meals */
+  html += '<section class="card">' + cardHead("🍽️", "Today's meals · " + dayName, "From your weekly meal plan — tap to edit.") +
+    '<div class="slot"><span class="sl">Breakfast</span>' + bindInput("meals.plan." + dayName + ".b", meals.b, {cls: "cellinput"}) + "</div>" +
+    '<div class="slot"><span class="sl">Lunch</span>' + bindInput("meals.plan." + dayName + ".l", meals.l, {cls: "cellinput"}) + "</div>" +
+    '<div class="slot"><span class="sl">Dinner</span>' + bindInput("meals.plan." + dayName + ".d", meals.d, {cls: "cellinput"}) + "</div>" +
+    '<p class="mini" style="margin-top:12px">Grocery items still to buy: <b>' + state.meals.grocery.filter(function(g){ return !g.done; }).length + '</b> · Bills still unpaid this month: <b>' + state.money.bills.filter(function(b){ return !b.paid; }).length + "</b></p>" +
+    "</section>";
+  html += "</div>";
+  return html;
+}
+
+/* ============================== CLEANING ============================== */
+function vCleaning(){
+  var s = SUB.cleaning;
+  var html = viewHead("🧹", "Cleaning", "Daily rhythms, a weekly schedule, zones and seasonal jobs — all in one place.", s === "schedule" ? "cleaning" : null);
+  html += subTabs("cleaning", [["checklists","Daily & Monthly"],["schedule","Weekly Schedule"],["zones","Zones & Rooms"],["laundry","Laundry & Seasonal"],["supplies","Supply List"],["challenge","30-Day Challenge"]]);
+  if (s === "checklists"){
+    html += '<div class="grid2"><section class="card">' + cardHead("🌞", "Daily checklist", "The small things that keep the house calm.") + chkList("cleaning.daily", state.cleaning.daily) + addRow("cleaning.daily", "Add a daily task…") + "</section>" +
+      '<section class="card">' + cardHead("🗓️", "Monthly checklist", "Once-a-month jobs — tick them off as the month goes on.") + chkList("cleaning.monthly", state.cleaning.monthly) + addRow("cleaning.monthly", "Add a monthly task…") + "</section></div>";
+  }
+  if (s === "schedule"){
+    html += '<section class="card">' + cardHead("📅", "Weekly cleaning schedule", "One focus per day keeps it light. Print it for the fridge door.") +
+      '<div class="irow"><span class="grow mini">This week\'s focus:</span>' + bindInput("cleaning.weeklyFocus", state.cleaning.weeklyFocus, {cls: "cellinput grow"}) + "</div>" +
+      '<div class="daygrid">' + DAYS.map(function(d, i){
+        return '<div class="daycard' + (i === dayIndex() ? " today" : "") + '"><h4>' + d + (i === dayIndex() ? '<span class="tag teal">Today</span>' : "") + "</h4>" +
+          chkList("cleaning.weeklyPlan." + d, state.cleaning.weeklyPlan[d]) + addRow("cleaning.weeklyPlan." + d, "Add for " + DAYS3[i] + "…") + "</div>";
+      }).join("") + "</div></section>";
+  }
+  if (s === "zones"){
+    var wk = ((state.cleaning.zoneWeek - 1) % 5) + 1;
+    html += '<section class="card">' + cardHead("🗺️", "Zone cleaning", "Five zones, one per week — the whole home gets a deep clean every five weeks without a big blitz.") +
+      '<p class="mini" style="margin-bottom:12px">This week\'s zone: <b>Zone ' + wk + '</b> · <button type="button" class="btn small" data-zone-next>Next zone →</button></p>' +
+      '<div class="stack">' + state.cleaning.zones.map(function(z, i){
+        return '<div class="zone' + (i === wk - 1 ? " active" : "") + '"><h4>' + esc(z.name) + (i === wk - 1 ? '<span class="tag coral">This week</span>' : "") + "</h4>" +
+          '<input class="field" type="text" data-bind="cleaning.zones.' + i + '.tasks" value="' + esc(z.tasks) + '" placeholder="What gets done in this zone…"></div>';
+      }).join("") + "</div></section>";
+    html += '<section class="card" style="margin-top:16px">' + cardHead("🚪", "Room by room", "A standing checklist for each room — handy for a deeper clean or for helpers.") +
+      '<div class="grid2">' + state.cleaning.rooms.map(function(r, ri){
+        return '<div><h3 style="margin-bottom:6px">' + esc(r.room) + "</h3>" + chkList("cleaning.rooms." + ri + ".tasks", r.tasks) + addRow("cleaning.rooms." + ri + ".tasks", "Add for " + r.room + "…") + "</div>";
+      }).join("") + "</div></section>";
+  }
+  if (s === "laundry"){
+    html += '<div class="grid2"><section class="card">' + cardHead("🧺", "Laundry schedule", "Which load, which day — no more laundry mountain.") +
+      state.cleaning.laundry.map(function(l, i){
+        return '<div class="irow">' + bindInput("cleaning.laundry." + i + ".day", l.day, {cls: "cellinput", }) + bindInput("cleaning.laundry." + i + ".load", l.load, {cls: "cellinput grow"}) +
+          '<button type="button" class="xbtn" data-del="cleaning.laundry:' + i + '" aria-label="Remove laundry row">×</button></div>';
+      }).join("") +
+      '<div style="margin-top:10px"><button type="button" class="btn small" data-addobj="laundry">+ Add a laundry day</button></div></section>' +
+      '<section class="card">' + cardHead("🍂", "Seasonal cleaning", "Four times a year, the bigger jobs.") +
+      ["Spring","Summer","Autumn","Winter"].map(function(sea){
+        return '<h3 style="margin:12px 0 4px">' + sea + "</h3>" + chkList("cleaning.seasonal." + sea, state.cleaning.seasonal[sea]) + addRow("cleaning.seasonal." + sea, "Add a " + sea.toLowerCase() + " job…");
+      }).join("") + "</section></div>";
+  }
+  if (s === "supplies"){
+    html += '<section class="card">' + cardHead("🧴", "Cleaning supply list", "Tick “running low” and it joins your shopping reminders.") +
+      state.cleaning.supplies.map(function(sp, i){
+        return '<div class="irow">' + bindInput("cleaning.supplies." + i + ".name", sp.name, {cls: "cellinput grow", ph: "Supply"}) +
+          bindInput("cleaning.supplies." + i + ".qty", sp.qty, {cls: "cellinput num", ph: "Qty"}) +
+          '<label class="chk" style="padding:4px 6px"><input type="checkbox" data-check="cleaning.supplies.' + i + '.low"' + (sp.low ? " checked" : "") + '><span class="ctext">Running low</span></label>' +
+          (sp.low ? '<span class="tag coral">Buy soon</span>' : "") +
+          '<button type="button" class="xbtn" data-del="cleaning.supplies:' + i + '" aria-label="Remove supply">×</button></div>';
+      }).join("") + addBtn("cleaning.supplies", "Add a supply") + "</section>";
+  }
+  if (s === "challenge"){
+    var doneCount = state.cleaning.challengeDone.filter(Boolean).length;
+    html += '<section class="card">' + cardHead("✨", "30-day cleaning challenge", "One tiny job a day. Tap a day to mark it done — " + doneCount + " of 30 done so far.") +
+      '<div class="chal">' + state.cleaning.challengeDay.map(function(task, i){
+        return '<button type="button" data-chal="cleaning:' + i + '" class="' + (state.cleaning.challengeDone[i] ? "done" : "") + '"><span class="dnum">DAY ' + (i + 1) + (state.cleaning.challengeDone[i] ? " ✓" : "") + '</span><span class="ctask">' + esc(task) + "</span></button>";
+      }).join("") + "</div></section>";
+  }
+  return html;
+}
+</script>
+<script>
+"use strict";
+/* ============================== FAMILY CHORES ============================== */
+function vChores(){
+  var s = SUB.chores;
+  var html = viewHead("🧒", "Family Chores", "Who does what, on which day — plus a rewards chart and the jobs that are always someone's.", s === "chart" ? "chores" : null);
+  html += subTabs("chores", [["chart","Chore Chart"],["rewards","Rewards Chart"],["resp","Weekly Responsibilities"],["people","Family Members"]]);
+  if (s === "chart"){
+    html += '<section class="card">' + cardHead("📋", "Weekly chore chart", "One chore per person per day is plenty. Tap any box to change it.") +
+      '<div class="grid2">' + state.people.map(function(p, pi){
+        return '<div><h3 style="margin-bottom:8px">🧑 ' + esc(p.name || "Person " + (pi + 1)) + (p.role ? ' <span class="mini">· ' + esc(p.role) + "</span>" : "") + "</h3>" +
+          DAYS.map(function(d){
+            var val = (state.chores.chart[String(pi)] || {})[d] || "";
+            return '<div class="slot"><span class="sl">' + DAYS3[DAYS.indexOf(d)] + '</span><input class="cellinput" type="text" data-chore="' + pi + "|" + d + '" value="' + esc(val) + '" placeholder="—"></div>';
+          }).join("") + "</div>";
+      }).join("") + "</div></section>";
+  }
+  if (s === "rewards"){
+    html += '<section class="card">' + cardHead("⭐", "Rewards chart", "Chores done, stars earned, a treat to look forward to. Use + / − to adjust stars.") +
+      state.chores.rewards.map(function(r, i){
+        return '<div class="irow"><span class="grow"><b>' + esc(r.person) + '</b> — ' + esc(r.reward) + "</span>" + starStr(r.stars, Math.max(r.goal, r.stars, 1)) +
+          '<button type="button" class="btn small" data-star="chores.rewards.' + i + ':-1" aria-label="Remove a star">−</button>' +
+          '<button type="button" class="btn small primary" data-star="chores.rewards.' + i + ':1" aria-label="Add a star">+ ★</button>' +
+          '<button type="button" class="xbtn" data-del="chores.rewards:' + i + '" aria-label="Remove reward row">×</button></div>' +
+          '<div class="irow">' + bindInput("chores.rewards." + i + ".person", r.person, {cls: "cellinput grow", ph: "Who"}) +
+          bindInput("chores.rewards." + i + ".reward", r.reward, {cls: "cellinput grow", ph: "Reward"}) +
+          '<label class="fl">Stars to earn it ' + bindInput("chores.rewards." + i + ".goal", r.goal, {cls: "cellinput num", type: "number"}) + "</label></div>";
+      }).join("") + addBtn("chores.rewards", "Add a reward") + "</section>";
+  }
+  if (s === "resp"){
+    html += '<section class="card">' + cardHead("📌", "Weekly responsibilities", "The standing jobs — the ones that are always the same person's.") +
+      state.chores.responsibilities.map(function(r, i){
+        return '<label class="chk"><input type="checkbox" data-check="chores.responsibilities.' + i + '.done"' + (r.done ? " checked" : "") + '><span class="ctext">' + esc(r.task) + '</span>' +
+          (r.who ? '<span class="who">' + esc(r.who) + "</span>" : "") +
+          '<button type="button" class="xbtn" data-del="chores.responsibilities:' + i + '" aria-label="Remove responsibility">×</button></label>' +
+          '<div class="irow">' + bindInput("chores.responsibilities." + i + ".task", r.task, {cls: "cellinput grow", ph: "The job"}) +
+          bindInput("chores.responsibilities." + i + ".who", r.who, {cls: "cellinput num", ph: "Who"}) + "</div>";
+      }).join("") + addBtn("chores.responsibilities", "Add a responsibility") + "</section>";
+  }
+  if (s === "people"){
+    html += '<section class="card">' + cardHead("👨‍👩‍👧‍👦", "Family members", "2 to 6 people works best. Names appear across the chore chart and records.") +
+      state.people.map(function(p, i){
+        return '<div class="irow">' + bindInput("people." + i + ".name", p.name, {cls: "cellinput grow", ph: "Name"}) +
+          bindInput("people." + i + ".role", p.role, {cls: "cellinput grow", ph: "e.g. Mum, Dad, Age 10"}) +
+          (state.people.length > 2 ? '<button type="button" class="xbtn" data-del="people:' + i + '" aria-label="Remove person">×</button>' : "") + "</div>";
+      }).join("") +
+      (state.people.length < 6 ? addBtn("people", "Add a person") : '<p class="mini" style="margin-top:8px">That\'s 6 — a full house!</p>') + "</section>";
+  }
+  return html;
+}
+
+/* ============================== DECLUTTER ============================== */
+function vDeclutter(){
+  var s = SUB.declutter;
+  var html = viewHead("📦", "Declutter", "Little by little: goals, a running tally of what's left the house, and one small challenge a day.", null);
+  html += subTabs("declutter", [["goals","Goals & Tracker"],["challenge","30-Day Challenge"],["makeover","Room Makeover Planner"]]);
+  if (s === "goals"){
+    var totalOut = state.declutter.tracker.reduce(function(a, t){ return a + (parseInt(t.donated, 10) || 0) + (parseInt(t.tossed, 10) || 0); }, 0);
+    html += '<div class="grid2"><section class="card">' + cardHead("🎯", "Declutter goals", "Set a target number of items, then count them out the door.") +
+      state.declutter.goals.map(function(g, i){
+        var pct = g.target > 0 ? Math.min(100, Math.round(100 * g.doneCount / g.target)) : 0;
+        return '<div style="margin-bottom:14px"><div class="irow">' + bindInput("declutter.goals." + i + ".text", g.text, {cls: "cellinput grow", ph: "Goal"}) +
+          '<button type="button" class="xbtn" data-del="declutter.goals:' + i + '" aria-label="Remove goal">×</button></div>' +
+          '<div class="irow"><label class="fl">Done ' + bindInput("declutter.goals." + i + ".doneCount", g.doneCount, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Target ' + bindInput("declutter.goals." + i + ".target", g.target, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<span class="mini">' + pct + '%</span></div><div class="progress"><div style="width:' + pct + '%"></div></div></div>';
+      }).join("") + addBtn("declutter.goals", "Add a goal") + "</section>" +
+      '<section class="card">' + cardHead("🧾", "Declutter tracker", "Every bag out counts. Total items out so far: <b>" + totalOut + "</b>") +
+      state.declutter.tracker.map(function(t, i){
+        return '<div class="irow">' + bindInput("declutter.tracker." + i + ".room", t.room, {cls: "cellinput grow", ph: "Room / area"}) +
+          '<label class="fl">Donated ' + bindInput("declutter.tracker." + i + ".donated", t.donated, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Tossed ' + bindInput("declutter.tracker." + i + ".tossed", t.tossed, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Date ' + bindInput("declutter.tracker." + i + ".date", t.date, {cls: "cellinput", type: "date"}) + '</label>' +
+          '<button type="button" class="xbtn" data-del="declutter.tracker:' + i + '" aria-label="Remove tracker row">×</button></div>';
+      }).join("") + addBtn("declutter.tracker", "Log a declutter session") + "</section></div>";
+  }
+  if (s === "challenge"){
+    var dc = state.declutter.challengeDone.filter(Boolean).length;
+    html += '<section class="card">' + cardHead("🗑️", "30-day declutter challenge", "One small thing out, every day. " + dc + " of 30 done.") +
+      '<div class="chal">' + state.declutter.challenge.map(function(task, i){
+        return '<button type="button" data-chal="declutter:' + i + '" class="' + (state.declutter.challengeDone[i] ? "done" : "") + '"><span class="dnum">DAY ' + (i + 1) + (state.declutter.challengeDone[i] ? " ✓" : "") + '</span><span class="ctask">' + esc(task) + "</span></button>";
+      }).join("") + "</div></section>";
+  }
+  if (s === "makeover"){
+    html += '<section class="card">' + cardHead("🛋️", "Room makeover planner", "One room at a time: a budget, the steps, and your notes.") +
+      (state.declutter.makeover.length ? "" : '<p class="empty">No makeover planned yet — add your first room below.</p>') +
+      state.declutter.makeover.map(function(m, i){
+        var pct = m.budget > 0 ? Math.min(100, Math.round(100 * m.spent / m.budget)) : 0;
+        return '<div class="zone" style="margin-bottom:14px"><div class="irow">' + bindInput("declutter.makeover." + i + ".room", m.room, {cls: "cellinput grow", ph: "Room & the plan"}) +
+          '<button type="button" class="xbtn" data-del="declutter.makeover:' + i + '" aria-label="Remove makeover">×</button></div>' +
+          '<div class="irow"><label class="fl">Budget $ ' + bindInput("declutter.makeover." + i + ".budget", m.budget, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Spent $ ' + bindInput("declutter.makeover." + i + ".spent", m.spent, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<span class="mini">' + money(m.budget - m.spent) + " left</span></div>" +
+          '<div class="progress coralbar"><div style="width:' + pct + '%"></div></div>' +
+          '<h3 style="margin:12px 0 4px">Steps</h3>' + chkList("declutter.makeover." + i + ".steps", m.steps) + addRow("declutter.makeover." + i + ".steps", "Add a step…") +
+          '<p class="mini" style="margin:10px 0 4px">Notes</p><textarea class="field" data-bind="declutter.makeover.' + i + '.notes" placeholder="Ideas, colours, links to remember…">' + esc(m.notes) + "</textarea></div>";
+      }).join("") + addBtn("declutter.makeover", "Plan a room makeover") + "</section>";
+  }
+  return html;
+}
+
+/* ============================== MEALS ============================== */
+function invCard(icon, title, path, items){
+  return '<section class="card">' + cardHead(icon, title, "Tap any field to edit. Watch the use-by dates!") +
+    (items.length ? "" : '<p class="empty">Empty — add what you have.</p>') +
+    items.map(function(it, i){
+      return '<div class="irow">' + bindInput(path + "." + i + ".item", it.item, {cls: "cellinput grow", ph: "Item"}) +
+        bindInput(path + "." + i + ".qty", it.qty, {cls: "cellinput num", ph: "Qty"}) +
+        '<label class="fl">Use by ' + bindInput(path + "." + i + ".exp", it.exp, {cls: "cellinput", type: "date"}) + '</label>' +
+        '<button type="button" class="xbtn" data-del="' + path + ":" + i + '" aria-label="Remove item">×</button></div>';
+    }).join("") + addBtn(path, "Add an item") + "</section>";
+}
+function vMeals(){
+  var s = SUB.meals;
+  var html = viewHead("🍽️", "Meals & Groceries", "Plan the week once, shop once, and stop wondering what's for dinner.", s === "planner" ? "meals" : null);
+  html += subTabs("meals", [["planner","Weekly Meal Plan"],["grocery","Grocery List"],["stock","Pantry · Fridge · Freezer"],["recipes","Favourite Recipes"]]);
+  if (s === "planner"){
+    html += '<section class="card">' + cardHead("📅", "Weekly meal planner", "Breakfast, lunch and dinner for the whole week. Print it and stick it on the fridge.") +
+      '<div class="daygrid">' + DAYS.map(function(d, i){
+        var m = state.meals.plan[d];
+        return '<div class="daycard' + (i === dayIndex() ? " today" : "") + '"><h4>' + d + (i === dayIndex() ? '<span class="tag teal">Today</span>' : "") + "</h4>" +
+          '<div class="slot"><span class="sl">Breakfast</span>' + bindInput("meals.plan." + d + ".b", m.b, {cls: "cellinput"}) + "</div>" +
+          '<div class="slot"><span class="sl">Lunch</span>' + bindInput("meals.plan." + d + ".l", m.l, {cls: "cellinput"}) + "</div>" +
+          '<div class="slot"><span class="sl">Dinner</span>' + bindInput("meals.plan." + d + ".d", m.d, {cls: "cellinput"}) + "</div></div>";
+      }).join("") + "</div></section>";
+  }
+  if (s === "grocery"){
+    var cats = ["Produce","Meat","Dairy","Pantry","Frozen","Household","Other"];
+    html += '<section class="card">' + cardHead("🛒", "Grocery list", "Tick things off as they go in the trolley.") +
+      (state.meals.grocery.length ? "" : '<p class="empty">Your list is empty.</p>') +
+      state.meals.grocery.map(function(g, i){
+        return '<label class="chk"><input type="checkbox" data-check="meals.grocery.' + i + '.done"' + (g.done ? " checked" : "") + '><span class="ctext">' + esc(g.item) + (g.qty ? ' <span class="mini">· ' + esc(g.qty) + "</span>" : "") + '</span><span class="who">' + esc(g.cat) + '</span>' +
+          '<button type="button" class="xbtn" data-del="meals.grocery:' + i + '" aria-label="Remove grocery item">×</button></label>' +
+          '<div class="irow">' + bindInput("meals.grocery." + i + ".item", g.item, {cls: "cellinput grow", ph: "Item"}) +
+          bindInput("meals.grocery." + i + ".qty", g.qty, {cls: "cellinput num", ph: "Qty"}) +
+          '<select class="field" style="width:auto" data-bind="meals.grocery.' + i + '.cat">' + cats.map(function(c){ return '<option value="' + c + '"' + (g.cat === c ? " selected" : "") + ">" + c + "</option>"; }).join("") + "</select></div>";
+      }).join("") + addBtn("meals.grocery", "Add a grocery item") + "</section>";
+  }
+  if (s === "stock"){
+    html += '<div class="stack">' + invCard("🥫", "Pantry inventory", "meals.pantry", state.meals.pantry) +
+      invCard("🧊", "Fridge inventory", "meals.fridge", state.meals.fridge) +
+      invCard("❄️", "Freezer inventory", "meals.freezer", state.meals.freezer) + "</div>";
+  }
+  if (s === "recipes"){
+    html += '<section class="card">' + cardHead("📖", "Favourite recipes", "The ones the family actually asks for again.") +
+      (state.meals.recipes.length ? "" : '<p class="empty">No recipes saved yet.</p>') +
+      state.meals.recipes.map(function(r, i){
+        return '<div class="zone" style="margin-bottom:14px"><div class="irow">' + bindInput("meals.recipes." + i + ".name", r.name, {cls: "cellinput grow", ph: "Recipe name"}) +
+          bindInput("meals.recipes." + i + ".mins", r.mins, {cls: "cellinput num", ph: "Time"}) +
+          '<button type="button" class="xbtn" data-del="meals.recipes:' + i + '" aria-label="Remove recipe">×</button></div>' +
+          '<p class="mini" style="margin:8px 0 4px">Ingredients</p><textarea class="field" data-bind="meals.recipes.' + i + '.ing" placeholder="What goes in it…">' + esc(r.ing) + "</textarea>" +
+          '<p class="mini" style="margin:8px 0 4px">Method</p><textarea class="field" data-bind="meals.recipes.' + i + '.steps" placeholder="How you make it, in your own words…">' + esc(r.steps) + "</textarea></div>";
+      }).join("") + addBtn("meals.recipes", "Add a recipe") + "</section>";
+  }
+  return html;
+}
+</script>
+<script>
+"use strict";
+/* ============================== MONEY ============================== */
+function vMoney(){
+  var s = SUB.money;
+  var html = viewHead("💰", "Money", "Budget, bills, savings and debts — the whole household picture in one place.", s === "budget" ? "money" : null);
+  html += subTabs("money", [["budget","Budgets"],["bills","Bill Tracker"],["save","Savings & Debts"],["subs","Subscriptions"]]);
+  if (s === "budget"){
+    var tb = state.money.budget.reduce(function(a, r){ return a + (parseFloat(r.budgeted) || 0); }, 0);
+    var ts = state.money.budget.reduce(function(a, r){ return a + (parseFloat(r.spent) || 0); }, 0);
+    html += '<section class="card">' + cardHead("🧮", "Monthly budget · " + esc(state.money.monthLabel), "Planned vs. actual — the difference updates as you type.") +
+      '<div class="irow"><span class="grow mini">Month</span>' + bindInput("money.monthLabel", state.money.monthLabel, {cls: "cellinput grow"}) +
+      '<label class="fl">Monthly income $ ' + bindInput("money.income", state.money.income, {cls: "cellinput num", type: "number"}) + "</label></div>" +
+      state.money.budget.map(function(r, i){
+        var d = (parseFloat(r.budgeted) || 0) - (parseFloat(r.spent) || 0);
+        return '<div class="irow">' + bindInput("money.budget." + i + ".cat", r.cat, {cls: "cellinput grow", ph: "Category"}) +
+          '<label class="fl">Budgeted $ ' + bindInput("money.budget." + i + ".budgeted", r.budgeted, {cls: "cellinput num", type: "number", step: "0.01"}) + '</label>' +
+          '<label class="fl">Spent $ ' + bindInput("money.budget." + i + ".spent", r.spent, {cls: "cellinput num", type: "number", step: "0.01"}) + '</label>' +
+          '<span class="diff ' + (d >= 0 ? "pos" : "neg") + '">' + (d >= 0 ? "" : "−") + money(Math.abs(d)).slice(0) + "</span>" +
+          '<button type="button" class="xbtn" data-del="money.budget:' + i + '" aria-label="Remove category">×</button></div>';
+      }).join("") + addBtn("money.budget", "Add a category") +
+      '<div class="kv" style="margin-top:10px"><span>Total budgeted</span><b>' + money(tb) + '</b></div>' +
+      '<div class="kv"><span>Total spent</span><b>' + money(ts) + '</b></div>' +
+      '<div class="kv"><span>Left of income</span><b>' + money((parseFloat(state.money.income) || 0) - ts) + "</b></div></section>";
+    html += '<section class="card" style="margin-top:16px">' + cardHead("📆", "Weekly budget", "A simple weekly spending limit keeps the month on track.") +
+      state.money.weekly.map(function(w, i){
+        var over = (parseFloat(w.spent) || 0) > (parseFloat(w.limitAmt) || 0);
+        return '<div class="irow">' + bindInput("money.weekly." + i + ".week", w.week, {cls: "cellinput grow", ph: "e.g. Week 1 (1–7 Dec)"}) +
+          '<label class="fl">Limit $ ' + bindInput("money.weekly." + i + ".limitAmt", w.limitAmt, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Spent $ ' + bindInput("money.weekly." + i + ".spent", w.spent, {cls: "cellinput num", type: "number"}) + '</label>' +
+          (over ? '<span class="tag coral">Over by ' + money(w.spent - w.limitAmt) + "</span>" : '<span class="tag teal">' + money(w.limitAmt - w.spent) + " left</span>") +
+          '<button type="button" class="xbtn" data-del="money.weekly:' + i + '" aria-label="Remove week">×</button></div>';
+      }).join("") + addBtn("money.weekly", "Add a week") + "</section>";
+  }
+  if (s === "bills"){
+    var unpaid = state.money.bills.filter(function(b){ return !b.paid; }).reduce(function(a, b){ return a + (parseFloat(b.amount) || 0); }, 0);
+    html += '<section class="card">' + cardHead("🧾", "Bill tracker", "Tick bills off as they're paid. Still to pay: <b>" + money(unpaid) + "</b>") +
+      state.money.bills.map(function(b, i){
+        return '<label class="chk"><input type="checkbox" data-check="money.bills.' + i + '.paid"' + (b.paid ? " checked" : "") + '><span class="ctext">' + esc(b.name) + " — " + money(b.amount) + '</span><span class="who">Due ' + esc(b.due) + '</span>' +
+          '<button type="button" class="xbtn" data-del="money.bills:' + i + '" aria-label="Remove bill">×</button></label>' +
+          '<div class="irow">' + bindInput("money.bills." + i + ".name", b.name, {cls: "cellinput grow", ph: "Bill"}) +
+          '<label class="fl">Amount $ ' + bindInput("money.bills." + i + ".amount", b.amount, {cls: "cellinput num", type: "number", step: "0.01"}) + '</label>' +
+          bindInput("money.bills." + i + ".due", b.due, {cls: "cellinput num", ph: "Due (e.g. 15th)"}) + "</div>";
+      }).join("") + addBtn("money.bills", "Add a bill") + "</section>";
+  }
+  if (s === "save"){
+    html += '<div class="grid2"><section class="card">' + cardHead("🐷", "Savings goals & challenges", "Watch each pot fill up.") +
+      state.money.savings.map(function(g, i){
+        var pct = g.goal > 0 ? Math.min(100, Math.round(100 * g.saved / g.goal)) : 0;
+        return '<div style="margin-bottom:14px"><div class="irow">' + bindInput("money.savings." + i + ".name", g.name, {cls: "cellinput grow", ph: "Goal or challenge name"}) +
+          '<button type="button" class="xbtn" data-del="money.savings:' + i + '" aria-label="Remove savings goal">×</button></div>' +
+          '<div class="irow"><label class="fl">Saved $ ' + bindInput("money.savings." + i + ".saved", g.saved, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Goal $ ' + bindInput("money.savings." + i + ".goal", g.goal, {cls: "cellinput num", type: "number"}) + '</label><span class="mini">' + pct + "% · " + money(Math.max(0, g.goal - g.saved)) + " to go</span></div>" +
+          '<div class="progress"><div style="width:' + pct + '%"></div></div>' +
+          bindInput("money.savings." + i + ".note", g.note, {cls: "cellinput", ph: "How you're saving (e.g. $25 every Friday)"}) + "</div>";
+      }).join("") + addBtn("money.savings", "Add a savings goal") + "</section>" +
+      '<section class="card">' + cardHead("⛄", "Debt payoff — snowball", "Listed smallest balance first: pay the minimum on everything, throw every spare dollar at the smallest, then roll that payment into the next.") +
+      state.money.debts.slice().sort(function(a, b){ return (parseFloat(a.balance) || 0) - (parseFloat(b.balance) || 0); }).map(function(d){
+        var i = state.money.debts.indexOf(d);
+        return '<div class="irow">' + bindInput("money.debts." + i + ".name", d.name, {cls: "cellinput grow", ph: "Debt"}) +
+          '<label class="fl">Balance $ ' + bindInput("money.debts." + i + ".balance", d.balance, {cls: "cellinput num", type: "number"}) + '</label>' +
+          '<label class="fl">Min $/mo ' + bindInput("money.debts." + i + ".min", d.min, {cls: "cellinput num", type: "number"}) + '</label>' +
+          bindInput("money.debts." + i + ".rate", d.rate, {cls: "cellinput num", ph: "Rate"}) +
+          '<button type="button" class="xbtn" data-del="money.debts:' + i + '" aria-label="Remove debt">×</button></div>';
+      }).join("") + addBtn("money.debts", "Add a debt") +
+      '<p class="mini" style="margin-top:8px">Total still owed: <b>' + money(state.money.debts.reduce(function(a, d){ return a + (parseFloat(d.balance) || 0); }, 0)) + "</b></p></section></div>";
+  }
+  if (s === "subs"){
+    var mTotal = state.money.subs.reduce(function(a, x){ return a + (x.cycle === "Yearly" ? (parseFloat(x.amount) || 0) / 12 : (parseFloat(x.amount) || 0)); }, 0);
+    html += '<section class="card">' + cardHead("🔁", "Subscriptions", "Everything that renews itself. Roughly <b>" + money(mTotal) + "/month</b> in total.") +
+      state.money.subs.map(function(x, i){
+        return '<div class="irow">' + bindInput("money.subs." + i + ".name", x.name, {cls: "cellinput grow", ph: "Service"}) +
+          '<label class="fl">Amount $ ' + bindInput("money.subs." + i + ".amount", x.amount, {cls: "cellinput num", type: "number", step: "0.01"}) + '</label>' +
+          '<select class="field" style="width:auto" data-bind="money.subs.' + i + '.cycle"><option value="Monthly"' + (x.cycle === "Monthly" ? " selected" : "") + '>Monthly</option><option value="Yearly"' + (x.cycle === "Yearly" ? " selected" : "") + ">Yearly</option></select>" +
+          bindInput("money.subs." + i + ".renew", x.renew, {cls: "cellinput num", ph: "Renews"}) +
+          '<button type="button" class="xbtn" data-del="money.subs:' + i + '" aria-label="Remove subscription">×</button></div>';
+      }).join("") + addBtn("money.subs", "Add a subscription") + "</section>";
+  }
+  return html;
+}
+
+/* ============================== HEALTH & HABITS ============================== */
+var MOODS = ["😄","😊","😐","😟","😢"];
+function vHealth(){
+  var s = SUB.health;
+  var html = viewHead("🌿", "Health & Habits", "Small daily habits, sleep and mood, medications, and a moment of gratitude.", null);
+  html += subTabs("health", [["habits","Habit Tracker"],["mood","Mood & Sleep"],["meds","Medication Log"],["care","Self-Care & Gratitude"]]);
+  if (s === "habits"){
+    html += '<section class="card">' + cardHead("✅", "Habit tracker — this week", "Tap a day when you've done it. Gentle counts, no pressure.") +
+      state.health.habits.map(function(hb, i){
+        return '<div class="habit"><div class="hname">' + bindInput("health.habits." + i + ".name", hb.name, {cls: "cellinput", ph: "Habit"}) +
+          '<button type="button" class="xbtn" data-del="health.habits:' + i + '" aria-label="Remove habit">×</button></div>' +
+          '<div class="dow">' + DAYS3.map(function(d, di){
+            return '<button type="button" data-habit="' + i + ":" + di + '" class="' + (hb.days[di] ? "on" : "") + '" aria-label="' + d + '">' + d + "<small>" + (hb.days[di] ? "done" : "·") + "</small></button>";
+          }).join("") + "</div></div>";
+      }).join("") + addBtn("health.habits", "Add a habit") + "</section>";
+  }
+  if (s === "mood"){
+    html += '<section class="card">' + cardHead("🌙", "Mood & sleep log", "A line a day shows the pattern — notice how sleep and mood travel together.") +
+      state.health.moodlog.map(function(m, i){
+        return '<div class="irow"><label class="fl">Date ' + bindInput("health.moodlog." + i + ".date", m.date, {cls: "cellinput", type: "date"}) + '</label>' +
+          '<select class="field" style="width:auto;font-size:1.2rem" data-bind="health.moodlog.' + i + '.mood" aria-label="Mood">' +
+          MOODS.map(function(mm){ return '<option value="' + mm + '"' + (m.mood === mm ? " selected" : "") + ">" + mm + "</option>"; }).join("") + "</select>" +
+          '<label class="fl">Sleep (hrs) ' + bindInput("health.moodlog." + i + ".sleep", m.sleep, {cls: "cellinput num", type: "number", step: "0.5"}) + '</label>' +
+          bindInput("health.moodlog." + i + ".note", m.note, {cls: "cellinput grow", ph: "One line about the day"}) +
+          '<button type="button" class="xbtn" data-del="health.moodlog:' + i + '" aria-label="Remove log entry">×</button></div>';
+      }).join("") + addBtn("health.moodlog", "Add today's entry") + "</section>";
+  }
+  if (s === "meds"){
+    html += '<section class="card">' + cardHead("💊", "Medication log", "Who takes what, and when. Tick when today's dose is done.") +
+      state.health.meds.map(function(m, i){
+        return '<label class="chk"><input type="checkbox" data-check="health.meds.' + i + '.taken"' + (m.taken ? " checked" : "") + '><span class="ctext">' + esc(m.name) + (m.dose ? " · " + esc(m.dose) : "") + '</span>' +
+          (m.who ? '<span class="who">' + esc(m.who) + "</span>" : "") +
+          '<button type="button" class="xbtn" data-del="health.meds:' + i + '" aria-label="Remove medication">×</button></label>' +
+          '<div class="irow">' + bindInput("health.meds." + i + ".name", m.name, {cls: "cellinput grow", ph: "Medicine"}) +
+          bindInput("health.meds." + i + ".dose", m.dose, {cls: "cellinput num", ph: "Dose"}) +
+          bindInput("health.meds." + i + ".time", m.time, {cls: "cellinput grow", ph: "When (e.g. with breakfast)"}) +
+          bindInput("health.meds." + i + ".who", m.who, {cls: "cellinput num", ph: "Who"}) + "</div>";
+      }).join("") + addBtn("health.meds", "Add a medication") +
+      '<p class="mini" style="margin-top:10px">A home reminder list only — always follow your doctor\u2019s and pharmacist\u2019s instructions.</p></section>';
+  }
+  if (s === "care"){
+    html += '<div class="grid2"><section class="card">' + cardHead("🛁", "Self-care list", "Small kindnesses for the grown-ups. Tick one off this week.") + chkList("health.selfcare", state.health.selfcare) + addRow("health.selfcare", "Add a self-care idea…") + "</section>" +
+      '<section class="card">' + cardHead("🙏", "Gratitude journal", "One good thing a day is enough.") +
+      state.health.gratitude.map(function(g, i){
+        return '<div class="irow"><label class="fl">Date ' + bindInput("health.gratitude." + i + ".date", g.date, {cls: "cellinput", type: "date"}) + '</label>' +
+          bindInput("health.gratitude." + i + ".text", g.text, {cls: "cellinput grow", ph: "Today I'm grateful for…"}) +
+          '<button type="button" class="xbtn" data-del="health.gratitude:' + i + '" aria-label="Remove entry">×</button></div>';
+      }).join("") + addBtn("health.gratitude", "Add today's gratitude") + "</section></div>";
+  }
+  return html;
+}
+
+/* ============================== PLANNING ============================== */
+function vPlanning(){
+  var s = SUB.planning;
+  var html = viewHead("🗒️", "Planning", "Goals, to-dos and plans — get it out of your head and onto the page.", null);
+  html += subTabs("planning", [["goals","Goals & To-Dos"],["daily","Daily Planner"],["weekly","Weekly Planner"],["monthly","Monthly & Brain Dump"]]);
+  if (s === "goals"){
+    html += '<div class="grid2"><section class="card">' + cardHead("🎯", "Goals", "The bigger picture for your home and family.") +
+      state.planning.goals.map(function(g, i){
+        return '<label class="chk"><input type="checkbox" data-check="planning.goals.' + i + '.done"' + (g.done ? " checked" : "") + '><span class="ctext">' + esc(g.text) + '</span>' +
+          (g.by ? '<span class="who">By ' + esc(g.by) + "</span>" : "") +
+          '<button type="button" class="xbtn" data-del="planning.goals:' + i + '" aria-label="Remove goal">×</button></label>' +
+          '<div class="irow">' + bindInput("planning.goals." + i + ".text", g.text, {cls: "cellinput grow", ph: "Goal"}) +
+          bindInput("planning.goals." + i + ".by", g.by, {cls: "cellinput num", ph: "By when"}) + "</div>";
+      }).join("") + addBtn("planning.goals", "Add a goal") + "</section>" +
+      '<section class="card">' + cardHead("✏️", "To-do list", "Everything else that needs doing, in one honest list.") + chkList("planning.todos", state.planning.todos) + addRow("planning.todos", "Add a to-do…") + "</section></div>";
+  }
+  if (s === "daily"){
+    html += '<section class="card">' + cardHead("⏰", "Daily planner", "The shape of a normal day — edit it to match yours.") +
+      state.planning.daily.map(function(d, i){
+        return '<div class="irow">' + bindInput("planning.daily." + i + ".time", d.time, {cls: "cellinput num", ph: "Time"}) +
+          bindInput("planning.daily." + i + ".task", d.task, {cls: "cellinput grow", ph: "What happens"}) +
+          '<button type="button" class="xbtn" data-del="planning.daily:' + i + '" aria-label="Remove time block">×</button></div>';
+      }).join("") + addBtn("planning.daily", "Add a time block") + "</section>";
+  }
+  if (s === "weekly"){
+    html += '<section class="card">' + cardHead("📅", "Weekly planner", "One line per day — the week's shape at a glance.") +
+      '<div class="daygrid">' + DAYS.map(function(d, i){
+        return '<div class="daycard' + (i === dayIndex() ? " today" : "") + '"><h4>' + d + (i === dayIndex() ? '<span class="tag teal">Today</span>' : "") + "</h4>" +
+          '<textarea class="field" data-bind="planning.weeklyPlan.' + d + '" placeholder="Main thing for ' + d + '…">' + esc(state.planning.weeklyPlan[d]) + "</textarea></div>";
+      }).join("") + "</div></section>";
+  }
+  if (s === "monthly"){
+    html += '<div class="grid2"><section class="card">' + cardHead("🌙", "Monthly notes", "Dates, deadlines and things to remember this month.") +
+      '<textarea class="field note-area" style="min-height:180px" data-bind="planning.monthlyNotes" placeholder="This month: appointments, deadlines, reminders…">' + esc(state.planning.monthlyNotes) + "</textarea></section>" +
+      '<section class="card">' + cardHead("🧠", "Brain dump", "Every thought out of your head — sort it later, or never. It\'s safe here.") +
+      '<textarea class="field note-area" style="min-height:180px" data-bind="planning.braindump" placeholder="Just start typing…">' + esc(state.planning.braindump) + "</textarea></section></div>";
+  }
+  return html;
+}
+
+/* ============================== RECORDS ============================== */
+function vRecords(){
+  var s = SUB.records;
+  var html = viewHead("🗂️", "Records", "The important stuff, findable in seconds — contacts, logins, policies, pets and documents.", null);
+  html += subTabs("records", [["contacts","Emergency Contacts"],["passwords","Passwords"],["insurance","Insurance"],["pets","Pets"],["docs","Documents"]]);
+  if (s === "contacts"){
+    html += '<section class="card">' + cardHead("☎️", "Emergency & useful contacts", "The numbers you never want to hunt for.") +
+      state.records.contacts.map(function(c, i){
+        return '<div class="irow">' + bindInput("records.contacts." + i + ".name", c.name, {cls: "cellinput grow", ph: "Name / service"}) +
+          bindInput("records.contacts." + i + ".relation", c.relation, {cls: "cellinput grow", ph: "Who they are"}) +
+          bindInput("records.contacts." + i + ".phone", c.phone, {cls: "cellinput grow", ph: "Phone", type: "tel"}) +
+          '<button type="button" class="xbtn" data-del="records.contacts:' + i + '" aria-label="Remove contact">×</button></div>';
+      }).join("") + addBtn("records.contacts", "Add a contact") + "</section>";
+  }
+  if (s === "passwords"){
+    html += '<section class="card">' + cardHead("🔑", "Password hints", "Where each login lives — many families keep the actual passwords in a password manager or a notebook and note the location here.") +
+      state.records.passwords.map(function(p, i){
+        return '<div class="irow">' + bindInput("records.passwords." + i + ".site", p.site, {cls: "cellinput grow", ph: "Site / service"}) +
+          bindInput("records.passwords." + i + ".user", p.user, {cls: "cellinput grow", ph: "Username"}) +
+          bindInput("records.passwords." + i + ".pass", p.pass, {cls: "cellinput grow", ph: "Password or where it's kept"}) +
+          '<button type="button" class="xbtn" data-del="records.passwords:' + i + '" aria-label="Remove login">×</button></div>';
+      }).join("") + addBtn("records.passwords", "Add a login") +
+      '<p class="mini" style="margin-top:10px">Stored only in this browser on this device, like everything in this app. For real passwords, a dedicated password manager is safer.</p></section>';
+  }
+  if (s === "insurance"){
+    html += '<section class="card">' + cardHead("🛡️", "Insurance", "Policies and renewal dates, all together.") +
+      state.records.insurance.map(function(p, i){
+        return '<div class="irow">' + bindInput("records.insurance." + i + ".type", p.type, {cls: "cellinput grow", ph: "Type (home, car…)"}) +
+          bindInput("records.insurance." + i + ".provider", p.provider, {cls: "cellinput grow", ph: "Provider"}) +
+          bindInput("records.insurance." + i + ".policy", p.policy, {cls: "cellinput num", ph: "Policy no."}) +
+          bindInput("records.insurance." + i + ".renew", p.renew, {cls: "cellinput num", ph: "Renews"}) +
+          '<button type="button" class="xbtn" data-del="records.insurance:' + i + '" aria-label="Remove policy">×</button></div>';
+      }).join("") + addBtn("records.insurance", "Add a policy") + "</section>";
+  }
+  if (s === "pets"){
+    html += '<section class="card">' + cardHead("🐾", "Pets", "Vet details, boosters and the little things that matter.") +
+      state.records.pets.map(function(p, i){
+        return '<div class="zone" style="margin-bottom:14px"><div class="irow">' + bindInput("records.pets." + i + ".name", p.name, {cls: "cellinput grow", ph: "Pet's name"}) +
+          bindInput("records.pets." + i + ".type", p.type, {cls: "cellinput grow", ph: "Type, breed, age"}) +
+          '<button type="button" class="xbtn" data-del="records.pets:' + i + '" aria-label="Remove pet">×</button></div>' +
+          '<div class="irow">' + bindInput("records.pets." + i + ".vet", p.vet, {cls: "cellinput grow", ph: "Vet name & phone"}) + "</div>" +
+          '<textarea class="field" data-bind="records.pets.' + i + '.notes" placeholder="Food, habits, vet dates, quirks…">' + esc(p.notes) + "</textarea></div>";
+      }).join("") + addBtn("records.pets", "Add a pet") + "</section>";
+  }
+  if (s === "docs"){
+    html += '<section class="card">' + cardHead("📄", "Important documents", "What it is, where it lives, when it expires.") +
+      state.records.docs.map(function(d, i){
+        return '<div class="irow">' + bindInput("records.docs." + i + ".name", d.name, {cls: "cellinput grow", ph: "Document"}) +
+          bindInput("records.docs." + i + ".location", d.location, {cls: "cellinput grow", ph: "Where it's kept"}) +
+          bindInput("records.docs." + i + ".exp", d.exp, {cls: "cellinput num", ph: "Expires"}) +
+          '<button type="button" class="xbtn" data-del="records.docs:' + i + '" aria-label="Remove document">×</button></div>';
+      }).join("") + addBtn("records.docs", "Add a document") + "</section>";
+  }
+  return html;
+}
+</script>
+<script>
+"use strict";
+/* ============================== PRINT SHEETS ============================== */
+function sheetShell(title, sub, bodyHTML){
+  return '<div class="pv-bar"><button type="button" class="btn" data-back>← Back to the app</button>' +
+    '<span class="mini">This is your clean, print-ready page. To print it or save it as a PDF, open this app in your browser and press <b>Ctrl + P</b> (Windows) or <b>⌘ + P</b> (Mac), then choose <b>US Letter</b> or <b>A4</b> — this sheet is the only thing that prints.</span></div>' +
+    '<div class="sheet"><h1>' + esc(title) + '</h1><p class="s-sub">' + esc(sub) + '</p>' + bodyHTML +
+    '<p class="foot">From our family\'s Home Management App · Printed ' + new Date().toLocaleDateString("en-GB", {day: "numeric", month: "long", year: "numeric"}) + "</p></div>";
+}
+function taskListPrint(items){
+  var open = items.filter(function(t){ return t.text; });
+  if (!open.length) return '<span style="color:#999">—</span>';
+  return "<ul>" + open.map(function(t){ return "<li>☐ " + esc(t.text) + "</li>"; }).join("") + "</ul>";
+}
+function printSheet(kind){
+  var body = "";
+  if (kind === "cleaning"){
+    body = "<h2>This week's focus</h2><p>" + esc(state.cleaning.weeklyFocus || "—") + "</p>" +
+      "<h2>Weekly schedule</h2><table><tr><th style='width:16%'>Day</th><th>Tasks</th></tr>" +
+      DAYS.map(function(d){ return "<tr><td><b>" + d + "</b></td><td>" + taskListPrint(state.cleaning.weeklyPlan[d]) + "</td></tr>"; }).join("") + "</table>" +
+      "<h2>Daily basics</h2>" + taskListPrint(state.cleaning.daily);
+    return sheetShell("Weekly Cleaning Schedule", "Our Home · tick each job off as it's done", body);
+  }
+  if (kind === "chores"){
+    body = "<table><tr><th>Person</th>" + DAYS3.map(function(d){ return "<th>" + d + "</th>"; }).join("") + "</tr>" +
+      state.people.map(function(p, pi){
+        return "<tr><td><b>" + esc(p.name) + "</b></td>" + DAYS.map(function(d){ return "<td>" + esc((state.chores.chart[String(pi)] || {})[d] || "—") + "</td>"; }).join("") + "</tr>";
+      }).join("") + "</table>" +
+      "<h2>Standing responsibilities</h2><ul>" + state.chores.responsibilities.filter(function(r){ return r.task; }).map(function(r){ return "<li>☐ " + esc(r.task) + (r.who ? " — <b>" + esc(r.who) + "</b>" : "") + "</li>"; }).join("") + "</ul>";
+    return sheetShell("Family Chore Chart", "Our Home · one job each, every day", body);
+  }
+  if (kind === "meals"){
+    body = "<table><tr><th style='width:14%'>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>" +
+      DAYS.map(function(d){ var m = state.meals.plan[d]; return "<tr><td><b>" + d + "</b></td><td>" + esc(m.b || "—") + "</td><td>" + esc(m.l || "—") + "</td><td>" + esc(m.d || "—") + "</td></tr>"; }).join("") + "</table>" +
+      "<h2>Grocery list</h2><ul>" + state.meals.grocery.filter(function(g){ return g.item; }).map(function(g){ return "<li>☐ " + esc(g.item) + (g.qty ? " — " + esc(g.qty) : "") + " <i>(" + esc(g.cat) + ")</i></li>"; }).join("") + "</ul>";
+    return sheetShell("Weekly Meal Plan", "Our Home · what's cooking this week", body);
+  }
+  if (kind === "money"){
+    var tb = 0, ts = 0;
+    var rows = state.money.budget.map(function(r){
+      tb += parseFloat(r.budgeted) || 0; ts += parseFloat(r.spent) || 0;
+      var d = (parseFloat(r.budgeted) || 0) - (parseFloat(r.spent) || 0);
+      return "<tr><td>" + esc(r.cat) + "</td><td>" + money(r.budgeted) + "</td><td>" + money(r.spent) + "</td><td>" + (d < 0 ? "−" + money(-d) : money(d)) + "</td></tr>";
+    }).join("");
+    body = "<table><tr><th>Category</th><th>Budgeted</th><th>Spent</th><th>Difference</th></tr>" + rows +
+      "<tr class='tot'><td>Total</td><td>" + money(tb) + "</td><td>" + money(ts) + "</td><td>" + money(tb - ts) + "</td></tr></table>" +
+      "<p style='margin-top:10px'>Monthly income: <b>" + money(state.money.income) + "</b> · Left after spending: <b>" + money((parseFloat(state.money.income) || 0) - ts) + "</b></p>" +
+      "<h2>Bills</h2><table><tr><th>Bill</th><th>Amount</th><th>Due</th><th>Paid?</th></tr>" +
+      state.money.bills.map(function(b){ return "<tr><td>" + esc(b.name) + "</td><td>" + money(b.amount) + "</td><td>" + esc(b.due) + "</td><td>" + (b.paid ? "Yes ✓" : "☐") + "</td></tr>"; }).join("") + "</table>" +
+      "<h2>Savings</h2><ul>" + state.money.savings.map(function(g){ return "<li>" + esc(g.name) + " — " + money(g.saved) + " of " + money(g.goal) + "</li>"; }).join("") + "</ul>";
+    return sheetShell("Budget Summary · " + (state.money.monthLabel || ""), "Our Home · planned vs. actual", body);
+  }
+  return "";
+}
+
+/* ============================== RENDER / NAV ============================== */
+var NAV = [
+  ["today", "🏠", "Today"],
+  ["cleaning", "🧹", "Cleaning"],
+  ["chores", "🧒", "Family Chores"],
+  ["declutter", "📦", "Declutter"],
+  ["meals", "🍽️", "Meals"],
+  ["money", "💰", "Money"],
+  ["health", "🌿", "Health & Habits"],
+  ["planning", "🗒️", "Planning"],
+  ["records", "🗂️", "Records"]
+];
+var VIEWS = { today: vToday, cleaning: vCleaning, chores: vChores, declutter: vDeclutter, meals: vMeals, money: vMoney, health: vHealth, planning: vPlanning, records: vRecords };
+function renderNav(){
+  $("#mainNav").innerHTML = NAV.map(function(n){
+    return '<button type="button" data-nav="' + n[0] + '"' + (view === n[0] ? ' class="active"' : "") + '><span class="ni" aria-hidden="true">' + n[1] + "</span>" + n[2] + "</button>";
+  }).join("");
+}
+function render(){
+  renderNav();
+  $("#viewRoot").innerHTML = VIEWS[view]();
+  window.scrollTo({top: 0});
+}
+
+/* ============================== EVENTS ============================== */
+document.addEventListener("click", function(e){
+  var t = e.target.closest("[data-nav],[data-sub],[data-del],[data-add],[data-addtext],[data-addobj],[data-print],[data-back],[data-mood],[data-chal],[data-habit],[data-star],[data-zone-next]");
+  if (!t) return;
+  if (t.hasAttribute("data-nav")){ view = t.getAttribute("data-nav"); render(); return; }
+  if (t.hasAttribute("data-sub")){
+    var sp = t.getAttribute("data-sub").split(":"); SUB[sp[0]] = sp[1]; render(); return;
+  }
+  if (t.hasAttribute("data-del")){
+    var dp = t.getAttribute("data-del").split(":"), arr = getP(state, dp[0]);
+    if (Array.isArray(arr)){ arr.splice(parseInt(dp[1], 10), 1); save(); render(); toast("Removed"); }
+    return;
+  }
+  if (t.hasAttribute("data-add")){
+    var ap = t.getAttribute("data-add"), aarr = getP(state, ap);
+    if (Array.isArray(aarr) && FACTORIES[ap]){ aarr.push(FACTORIES[ap]()); save(); render(); }
+    return;
+  }
+  if (t.hasAttribute("data-addobj")){
+    if (t.getAttribute("data-addobj") === "laundry"){ state.cleaning.laundry.push({day: "", load: ""}); save(); render(); }
+    return;
+  }
+  if (t.hasAttribute("data-addtext")){
+    var tp = t.getAttribute("data-addtext");
+    var inp = document.querySelector('[data-addinput="' + tp + '"]');
+    var val = inp ? inp.value.trim() : "";
+    var tarr = getP(state, tp);
+    if (Array.isArray(tarr)){
+      var item = FACTORIES[tp] ? FACTORIES[tp]() : T("");
+      if (item && "text" in item) item.text = val;
+      tarr.push(item); save(); render();
+    }
+    return;
+  }
+  if (t.hasAttribute("data-print")){
+    $("#printView").innerHTML = printSheet(t.getAttribute("data-print"));
+    document.body.classList.add("printing");
+    window.scrollTo({top: 0});
+    return;
+  }
+  if (t.hasAttribute("data-back")){ document.body.classList.remove("printing"); return; }
+  if (t.hasAttribute("data-mood")){
+    var ck = state.checkins[todayKey()] || {mood: "", energy: 3, note: ""};
+    ck.mood = t.getAttribute("data-mood"); state.checkins[todayKey()] = ck; save(); render();
+    return;
+  }
+  if (t.hasAttribute("data-chal")){
+    var cp = t.getAttribute("data-chal").split(":");
+    var arr2 = cp[0] === "cleaning" ? state.cleaning.challengeDone : state.declutter.challengeDone;
+    var idx = parseInt(cp[1], 10);
+    arr2[idx] = !arr2[idx]; save(); render();
+    return;
+  }
+  if (t.hasAttribute("data-habit")){
+    var hp = t.getAttribute("data-habit").split(":");
+    var hb = state.health.habits[parseInt(hp[0], 10)];
+    if (hb){ var di2 = parseInt(hp[1], 10); hb.days[di2] = !hb.days[di2]; save(); render(); }
+    return;
+  }
+  if (t.hasAttribute("data-star")){
+    var stp = t.getAttribute("data-star").split(":");
+    var robj = getP(state, stp[0]);
+    if (robj){ robj.stars = Math.max(0, (parseInt(robj.stars, 10) || 0) + parseInt(stp[1], 10)); save(); render(); }
+    return;
+  }
+  if (t.hasAttribute("data-zone-next")){
+    state.cleaning.zoneWeek = (state.cleaning.zoneWeek % 5) + 1; save(); render();
+    return;
+  }
+});
+document.addEventListener("change", function(e){
+  var t = e.target;
+  if (t.matches("[data-bind]")){
+    var v = t.type === "number" ? (t.value === "" ? 0 : parseFloat(t.value)) : t.value;
+    setP(state, t.getAttribute("data-bind"), v); save();
+    if (view === "money" || t.getAttribute("data-bind").indexOf("declutter.goals") === 0 || t.getAttribute("data-bind").indexOf("declutter.makeover") === 0) render();
+    return;
+  }
+  if (t.matches("[data-check]")){
+    setP(state, t.getAttribute("data-check"), t.checked); save();
+    if (view === "money" || view === "cleaning") render();
+    return;
+  }
+  if (t.matches("[data-chore]")){
+    var cp2 = t.getAttribute("data-chore").split("|");
+    if (!state.chores.chart[cp2[0]]) state.chores.chart[cp2[0]] = {};
+    state.chores.chart[cp2[0]][cp2[1]] = t.value; save();
+    return;
+  }
+  if (t.matches("[data-range]")){
+    var ck2 = state.checkins[todayKey()] || {mood: "", energy: 3, note: ""};
+    ck2.energy = parseInt(t.value, 10); state.checkins[todayKey()] = ck2; save(); render();
+    return;
+  }
+  if (t.matches("[data-checkin-note]")){
+    var ck3 = state.checkins[todayKey()] || {mood: "", energy: 3, note: ""};
+    ck3.note = t.value; state.checkins[todayKey()] = ck3; save();
+    return;
+  }
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === "Enter" && e.target.matches && e.target.matches("[data-addinput]")){
+    e.preventDefault();
+    var p = e.target.getAttribute("data-addinput");
+    var btn = document.querySelector('[data-addtext="' + p + '"]');
+    if (btn) btn.click();
+  }
+  if (e.key === "Escape" && document.body.classList.contains("printing")){
+    document.body.classList.remove("printing");
+  }
+});
+
+/* family name edit (click the greeting name area is view-only; name lives in Today via prompt-free input in Records? Keep simple: sidebar brand click does nothing) */
+
+/* ============================== BACKUP / RESTORE ============================== */
+$("#btnBackup").addEventListener("click", function(){
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type: "application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "home-management-backup-" + todayKey() + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  toast("Backup downloaded ✓");
+});
+$("#btnRestore").addEventListener("click", function(){ $("#fileRestore").click(); });
+$("#fileRestore").addEventListener("change", function(){
+  var f = this.files && this.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var data = JSON.parse(reader.result);
+      if (!data || !data.cleaning || !data.meals || !data.money || !data.records) throw new Error("bad file");
+      state = data; save(); render(); toast("Backup restored ✓ Welcome back!");
+    } catch(err){ toast("That file doesn't look like a Home Management backup."); }
+  };
+  reader.readAsText(f);
+  this.value = "";
+});
+var demoArm = false, demoTimer = null;
+$("#btnDemo").addEventListener("click", function(){
+  if (!demoArm){
+    demoArm = true; this.textContent = "⚠ Tap again to replace everything with demo data";
+    toast("This replaces ALL current data with the demo. Tap again to confirm.");
+    demoTimer = setTimeout(function(){ demoArm = false; $("#btnDemo").textContent = "↺ Restore demo data"; }, 5000);
+    return;
+  }
+  clearTimeout(demoTimer); demoArm = false; this.textContent = "↺ Restore demo data";
+  state = demoData(); save(); view = "today"; render();
+  toast("Demo data restored — say hello to Sara's family 👋");
+});
+
+/* ============================== INIT ============================== */
+render();
+</script>
+</body>
+</html>
