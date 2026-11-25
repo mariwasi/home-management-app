@@ -1277,7 +1277,7 @@ function vRecords(){
 function sheetShell(title, sub, bodyHTML){
   return '<div class="pv-bar"><button type="button" class="btn" data-back onclick="return exitPrintView()">← Back to the app</button>' +
     '<button type="button" class="btn primary" data-printnow>🖨 Print / Save as PDF</button>' +
-    '<span class="mini">Your print dialogue should already be open — if it isn\'t, tap <b>Print / Save as PDF</b>. Choose <b>US Letter</b> or <b>A4</b> — this sheet is the only thing that prints, and it shows your plan exactly as you\'ve filled it in.</span></div>' +
+    '<span class="mini">This is a preview of your sheet, exactly as you\'ve filled it in. Tap <b>Print / Save as PDF</b> to print just this sheet — choose <b>US Letter</b> or <b>A4</b> — or tap <b>Back to the app</b> to keep editing.</span></div>' +
     '<div class="sheet"><h1>' + esc(title) + '</h1><p class="s-sub">' + esc(sub) + '</p>' + bodyHTML +
     '<p class="foot">From our family\'s Home Management App · Printed ' + new Date().toLocaleDateString("en-GB", {day: "numeric", month: "long", year: "numeric"}) + "</p></div>";
 }
@@ -1438,8 +1438,14 @@ document.addEventListener("click", function(e){
        attached to the element itself rather than any document-level delegation. */
     var bb = pv2.querySelector("[data-back]");
     if (bb) bb.addEventListener("click", function(){ exitPrintView(); });
-    /* open the browser print dialogue straight away — the sheet reflects the current filled state */
-    setTimeout(function(){ try { window.print(); } catch(e){} }, 80);
+    /* Deliberately NO automatic window.print() here. Opening the browser's print dialogue
+       on a timer was the root cause of the "dead Back button" on the live site: the dialogue
+       is modal, so while it sits open no click or keypress ever reaches the page — Back,
+       Escape, everything is swallowed, and only a reload escapes. In the sandboxed preview
+       window.print() is blocked, which is why the button always "worked" there. Instead the
+       sheet opens as an on-screen preview and the user taps its own Print / Save as PDF
+       button (a real tap, handled by data-printnow) when they actually want to print; the
+       afterprint hook then returns them to the app, and Back stays reachable at all times. */
     return;
   }
   if (t.hasAttribute("data-printnow")){
