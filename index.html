@@ -142,14 +142,18 @@ textarea.field{resize:vertical; min-height:64px}
 .diff.pos{color:var(--teal-dark)} .diff.neg{color:var(--coral-dark)}
 
 /* day cards (meal plan / cleaning schedule) */
-.daygrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:14px}
+.daygrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(264px,1fr)); gap:14px}
 .daycard{background:#FFFDF8; border:1px solid var(--line); border-radius:14px; padding:13px 14px}
 .daycard.today{border-color:var(--teal); box-shadow:0 0 0 2px #CBE8E1}
 .daycard h4{margin:0 0 8px; font-size:.98rem; display:flex; align-items:center; gap:8px}
 .daycard h4 .tag{margin-left:auto}
-.slot{display:flex; align-items:center; gap:8px; margin-top:6px}
-.slot .sl{flex:0 0 74px; font-size:.8rem; font-weight:700; color:var(--muted)}
+.slot{display:flex; align-items:flex-start; gap:8px; margin-top:6px}
+.slot .sl{flex:0 0 74px; font-size:.8rem; font-weight:700; color:var(--muted); padding-top:8px}
 .slot input{flex:1; min-width:0}
+.slot textarea{flex:1; min-width:0}
+.mealfield{resize:none; overflow:hidden; line-height:1.35; white-space:pre-wrap; overflow-wrap:break-word}
+.irow .rowmain{display:flex; align-items:center; gap:8px; flex:1 1 180px; min-width:0}
+.irow .rowmain .grow{flex:1; min-width:0}
 .daycard .chk{padding:5px 4px; min-height:2.4rem}
 
 /* challenge grid */
@@ -695,12 +699,17 @@ function viewHead(icon, title, sub, printKind){
     (sub ? '<p class="vsub">' + esc(sub) + "</p>" : "") + "</div>";
 }
 function cardHead(icon, title, hint){
-  return '<div class="card-head"><h3>' + icon + " " + esc(title) + "</h3>" + (hint ? '<span class="hint">' + esc(hint) + "</span>" : "") + "</div>";
+  /* hint is app-authored copy (may include <b> around live totals) — render it as HTML, not escaped text */
+  return '<div class="card-head"><h3>' + icon + " " + esc(title) + "</h3>" + (hint ? '<span class="hint">' + hint + "</span>" : "") + "</div>";
 }
 function bindInput(path, value, opts){
   opts = opts || {};
   return '<input class="' + (opts.cls || "field") + '" type="' + (opts.type || "text") + '" data-bind="' + path + '" value="' + esc(value) + '"' +
     (opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : "") + (opts.step ? ' step="' + opts.step + '"' : "") + ">";
+}
+function bindArea(path, value){
+  /* auto-growing textarea for meal names: the full text wraps and stays visible, no clicking in needed */
+  return '<textarea class="cellinput mealfield" rows="1" data-autosize data-bind="' + path + '">' + esc(value) + "</textarea>";
 }
 function starStr(n, goal){
   var s = "", i;
@@ -744,7 +753,10 @@ function vToday(){
   html += '<div class="grid2">';
   /* Top 3 + more */
   html += '<section class="card top3">' + cardHead("⭐", "Today's Top 3", "The three things that matter most today. Tick them off as you go.") +
-    chkList("today.top3", state.today.top3) + addRow("today.top3", "Add a priority…") +
+    chkList("today.top3", state.today.top3) +
+    (state.today.top3.length >= 3
+      ? '<p class="mini" style="margin-top:10px">That\'s your 3 — tick one off or remove one to swap in another.</p>'
+      : addRow("today.top3", "Add a priority…")) +
     '<h3 style="margin:16px 0 6px">🌿 Also today</h3>' + chkList("today.extra", state.today.extra) + addRow("today.extra", "Add a smaller task…") + "</section>";
   /* check-in */
   html += '<section class="card">' + cardHead("💛", "Quick check-in", "Ten seconds, just for you. Saved for today only in this view.") +
@@ -763,9 +775,9 @@ function vToday(){
     addRow("cleaning.weeklyPlan." + dayName, "Add a cleaning task for " + dayName + "…") + "</section>";
   /* today's meals */
   html += '<section class="card">' + cardHead("🍽️", "Today's meals · " + dayName, "From your weekly meal plan — tap to edit.") +
-    '<div class="slot"><span class="sl">Breakfast</span>' + bindInput("meals.plan." + dayName + ".b", meals.b, {cls: "cellinput"}) + "</div>" +
-    '<div class="slot"><span class="sl">Lunch</span>' + bindInput("meals.plan." + dayName + ".l", meals.l, {cls: "cellinput"}) + "</div>" +
-    '<div class="slot"><span class="sl">Dinner</span>' + bindInput("meals.plan." + dayName + ".d", meals.d, {cls: "cellinput"}) + "</div>" +
+    '<div class="slot"><span class="sl">Breakfast</span>' + bindArea("meals.plan." + dayName + ".b", meals.b) + "</div>" +
+    '<div class="slot"><span class="sl">Lunch</span>' + bindArea("meals.plan." + dayName + ".l", meals.l) + "</div>" +
+    '<div class="slot"><span class="sl">Dinner</span>' + bindArea("meals.plan." + dayName + ".d", meals.d) + "</div>" +
     '<p class="mini" style="margin-top:12px">Grocery items still to buy: <b>' + state.meals.grocery.filter(function(g){ return !g.done; }).length + '</b> · Bills still unpaid this month: <b>' + state.money.bills.filter(function(b){ return !b.paid; }).length + "</b></p>" +
     "</section>";
   html += "</div>";
@@ -903,11 +915,11 @@ function vDeclutter(){
       }).join("") + addBtn("declutter.goals", "Add a goal") + "</section>" +
       '<section class="card">' + cardHead("🧾", "Declutter tracker", "Every bag out counts. Total items out so far: <b>" + totalOut + "</b>") +
       state.declutter.tracker.map(function(t, i){
-        return '<div class="irow">' + bindInput("declutter.tracker." + i + ".room", t.room, {cls: "cellinput grow", ph: "Room / area"}) +
+        return '<div class="irow"><span class="rowmain">' + bindInput("declutter.tracker." + i + ".room", t.room, {cls: "cellinput grow", ph: "Room / area"}) +
+          '<button type="button" class="xbtn" data-del="declutter.tracker:' + i + '" aria-label="Remove tracker row">×</button></span>' +
           '<label class="fl">Donated ' + bindInput("declutter.tracker." + i + ".donated", t.donated, {cls: "cellinput num", type: "number"}) + '</label>' +
           '<label class="fl">Tossed ' + bindInput("declutter.tracker." + i + ".tossed", t.tossed, {cls: "cellinput num", type: "number"}) + '</label>' +
-          '<label class="fl">Date ' + bindInput("declutter.tracker." + i + ".date", t.date, {cls: "cellinput", type: "date"}) + '</label>' +
-          '<button type="button" class="xbtn" data-del="declutter.tracker:' + i + '" aria-label="Remove tracker row">×</button></div>';
+          '<label class="fl">Date ' + bindInput("declutter.tracker." + i + ".date", t.date, {cls: "cellinput", type: "date"}) + '</label></div>';
       }).join("") + addBtn("declutter.tracker", "Log a declutter session") + "</section></div>";
   }
   if (s === "challenge"){
@@ -955,9 +967,9 @@ function vMeals(){
       '<div class="daygrid">' + DAYS.map(function(d, i){
         var m = state.meals.plan[d];
         return '<div class="daycard' + (i === dayIndex() ? " today" : "") + '"><h4>' + d + (i === dayIndex() ? '<span class="tag teal">Today</span>' : "") + "</h4>" +
-          '<div class="slot"><span class="sl">Breakfast</span>' + bindInput("meals.plan." + d + ".b", m.b, {cls: "cellinput"}) + "</div>" +
-          '<div class="slot"><span class="sl">Lunch</span>' + bindInput("meals.plan." + d + ".l", m.l, {cls: "cellinput"}) + "</div>" +
-          '<div class="slot"><span class="sl">Dinner</span>' + bindInput("meals.plan." + d + ".d", m.d, {cls: "cellinput"}) + "</div></div>";
+          '<div class="slot"><span class="sl">Breakfast</span>' + bindArea("meals.plan." + d + ".b", m.b) + "</div>" +
+          '<div class="slot"><span class="sl">Lunch</span>' + bindArea("meals.plan." + d + ".l", m.l) + "</div>" +
+          '<div class="slot"><span class="sl">Dinner</span>' + bindArea("meals.plan." + d + ".d", m.d) + "</div></div>";
       }).join("") + "</div></section>";
   }
   if (s === "grocery"){
@@ -1225,14 +1237,15 @@ function vRecords(){
 /* ============================== PRINT SHEETS ============================== */
 function sheetShell(title, sub, bodyHTML){
   return '<div class="pv-bar"><button type="button" class="btn" data-back>← Back to the app</button>' +
-    '<span class="mini">This is your clean, print-ready page. To print it or save it as a PDF, open this app in your browser and press <b>Ctrl + P</b> (Windows) or <b>⌘ + P</b> (Mac), then choose <b>US Letter</b> or <b>A4</b> — this sheet is the only thing that prints.</span></div>' +
+    '<button type="button" class="btn primary" data-printnow>🖨 Print / Save as PDF</button>' +
+    '<span class="mini">Your print dialogue should already be open — if it isn\'t, tap <b>Print / Save as PDF</b>. Choose <b>US Letter</b> or <b>A4</b> — this sheet is the only thing that prints, and it shows your plan exactly as you\'ve filled it in.</span></div>' +
     '<div class="sheet"><h1>' + esc(title) + '</h1><p class="s-sub">' + esc(sub) + '</p>' + bodyHTML +
     '<p class="foot">From our family\'s Home Management App · Printed ' + new Date().toLocaleDateString("en-GB", {day: "numeric", month: "long", year: "numeric"}) + "</p></div>";
 }
 function taskListPrint(items){
   var open = items.filter(function(t){ return t.text; });
   if (!open.length) return '<span style="color:#999">—</span>';
-  return "<ul>" + open.map(function(t){ return "<li>☐ " + esc(t.text) + "</li>"; }).join("") + "</ul>";
+  return "<ul>" + open.map(function(t){ return "<li>" + (t.done ? "☑ " : "☐ ") + esc(t.text) + "</li>"; }).join("") + "</ul>";
 }
 function printSheet(kind){
   var body = "";
@@ -1248,13 +1261,13 @@ function printSheet(kind){
       state.people.map(function(p, pi){
         return "<tr><td><b>" + esc(p.name) + "</b></td>" + DAYS.map(function(d){ return "<td>" + esc((state.chores.chart[String(pi)] || {})[d] || "—") + "</td>"; }).join("") + "</tr>";
       }).join("") + "</table>" +
-      "<h2>Standing responsibilities</h2><ul>" + state.chores.responsibilities.filter(function(r){ return r.task; }).map(function(r){ return "<li>☐ " + esc(r.task) + (r.who ? " — <b>" + esc(r.who) + "</b>" : "") + "</li>"; }).join("") + "</ul>";
+      "<h2>Standing responsibilities</h2><ul>" + state.chores.responsibilities.filter(function(r){ return r.task; }).map(function(r){ return "<li>" + (r.done ? "☑ " : "☐ ") + esc(r.task) + (r.who ? " — <b>" + esc(r.who) + "</b>" : "") + "</li>"; }).join("") + "</ul>";
     return sheetShell("Family Chore Chart", "Our Home · one job each, every day", body);
   }
   if (kind === "meals"){
     body = "<table><tr><th style='width:14%'>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>" +
       DAYS.map(function(d){ var m = state.meals.plan[d]; return "<tr><td><b>" + d + "</b></td><td>" + esc(m.b || "—") + "</td><td>" + esc(m.l || "—") + "</td><td>" + esc(m.d || "—") + "</td></tr>"; }).join("") + "</table>" +
-      "<h2>Grocery list</h2><ul>" + state.meals.grocery.filter(function(g){ return g.item; }).map(function(g){ return "<li>☐ " + esc(g.item) + (g.qty ? " — " + esc(g.qty) : "") + " <i>(" + esc(g.cat) + ")</i></li>"; }).join("") + "</ul>";
+      "<h2>Grocery list</h2><ul>" + state.meals.grocery.filter(function(g){ return g.item; }).map(function(g){ return "<li>" + (g.done ? "☑ " : "☐ ") + esc(g.item) + (g.qty ? " — " + esc(g.qty) : "") + " <i>(" + esc(g.cat) + ")</i></li>"; }).join("") + "</ul>";
     return sheetShell("Weekly Meal Plan", "Our Home · what's cooking this week", body);
   }
   if (kind === "money"){
@@ -1293,15 +1306,22 @@ function renderNav(){
     return '<button type="button" data-nav="' + n[0] + '"' + (view === n[0] ? ' class="active"' : "") + '><span class="ni" aria-hidden="true">' + n[1] + "</span>" + n[2] + "</button>";
   }).join("");
 }
+function autosizeAreas(root){
+  (root || document).querySelectorAll("textarea[data-autosize]").forEach(function(ta){
+    ta.style.height = "auto";
+    ta.style.height = ta.scrollHeight + "px";
+  });
+}
 function render(){
   renderNav();
   $("#viewRoot").innerHTML = VIEWS[view]();
+  autosizeAreas($("#viewRoot"));
   window.scrollTo({top: 0});
 }
 
 /* ============================== EVENTS ============================== */
 document.addEventListener("click", function(e){
-  var t = e.target.closest("[data-nav],[data-sub],[data-del],[data-add],[data-addtext],[data-addobj],[data-print],[data-back],[data-mood],[data-chal],[data-habit],[data-star],[data-zone-next]");
+  var t = e.target.closest("[data-nav],[data-sub],[data-del],[data-add],[data-addtext],[data-addobj],[data-print],[data-printnow],[data-back],[data-mood],[data-chal],[data-habit],[data-star],[data-zone-next]");
   if (!t) return;
   if (t.hasAttribute("data-nav")){ view = t.getAttribute("data-nav"); render(); return; }
   if (t.hasAttribute("data-sub")){
@@ -1327,6 +1347,7 @@ document.addEventListener("click", function(e){
     var val = inp ? inp.value.trim() : "";
     var tarr = getP(state, tp);
     if (Array.isArray(tarr)){
+      if (tp === "today.top3" && tarr.length >= 3){ toast("Your Top 3 is full — tick one off or remove one first."); return; }
       var item = FACTORIES[tp] ? FACTORIES[tp]() : T("");
       if (item && "text" in item) item.text = val;
       tarr.push(item); save(); render();
@@ -1337,6 +1358,12 @@ document.addEventListener("click", function(e){
     $("#printView").innerHTML = printSheet(t.getAttribute("data-print"));
     document.body.classList.add("printing");
     window.scrollTo({top: 0});
+    /* open the browser print dialogue straight away — the sheet reflects the current filled state */
+    setTimeout(function(){ try { window.print(); } catch(e){} }, 80);
+    return;
+  }
+  if (t.hasAttribute("data-printnow")){
+    try { window.print(); } catch(e){}
     return;
   }
   if (t.hasAttribute("data-back")){ document.body.classList.remove("printing"); return; }
@@ -1397,6 +1424,13 @@ document.addEventListener("change", function(e){
     var ck3 = state.checkins[todayKey()] || {mood: "", energy: 3, note: ""};
     ck3.note = t.value; state.checkins[todayKey()] = ck3; save();
     return;
+  }
+});
+document.addEventListener("input", function(e){
+  var t = e.target;
+  if (t.matches && t.matches("textarea[data-autosize]")){
+    t.style.height = "auto";
+    t.style.height = t.scrollHeight + "px";
   }
 });
 document.addEventListener("keydown", function(e){
